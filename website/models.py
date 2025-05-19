@@ -60,3 +60,16 @@ class Projects(models.Model):
 
     def __str__(self):
         return self.name    
+
+class ProjectsTable(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.CharField(null=True,max_length=500)
+    status = models.IntegerField(default=1)
+    created_by = models.BigIntegerField()
+    img_name = models.CharField(max_length=255,null=True, blank=True)
+    img_path = models.ImageField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name      
