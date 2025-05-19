@@ -270,6 +270,17 @@ def delete_team(request, team_id):
     team.delete()
     return redirect('teams')
 
+#Project Pages
+@login_required
+def project_index(request):
+    title = "Projects"
+    return render(request, 'project/index.html', {'title': title})
+
+@login_required
+def project_create(request):
+    title = "Projects Create"
+    return render(request, 'project/create.html', {'title': title})
+
 #Task Pages
 @login_required
 def task_index(request):
@@ -281,4 +292,7 @@ def task_create(request):
     title = "Tasks Create"
     return render(request, 'tasks/create.html', {'title': title})
 
-
+@login_required
+def chat_index(request):
+    title = "Chat"
+    return render(request, 'chats/index.html', {'title': title})

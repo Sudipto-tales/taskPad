@@ -2,7 +2,9 @@ from django.urls import path
 from .views import (register_view, register,login , verify_email, login_view, 
 home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
-task_index,task_create)
+project_index,project_create,
+task_index,task_create,
+chat_index)
 
 urlpatterns = [
 
@@ -27,4 +29,11 @@ path('teams/create/', create_team, name='create_team'),
 #Tasks Paths
 path('tasks/', task_index, name='tasks'),
 path('tasks/create/', task_create, name='tasks.create'),
+
+#Projects Paths
+path('projects/', project_index, name='projects'),
+path('projects/create/', project_create, name='projects.create'),
+
+
+path('chats/', chat_index, name='chats'),
 ]
