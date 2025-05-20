@@ -304,4 +304,5 @@ def chat_index(request):
 
 @login_required
 def profile_view(request):
-    return render(request, 'profile/profile.html')
+    title = "Profile"
+    return render(request, 'profile/index.html', {'title': title})
