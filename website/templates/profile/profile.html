@@ -115,68 +115,7 @@
                                 </div> <!-- end card -->
 
                                 <!-- Messages-->
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h4 class="header-title">Messages</h4>
-                                            <div class="dropdown">
-                                                <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="mdi mdi-dots-vertical"></i>
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item">Settings</a>
-                                                    <!-- item-->
-                                                    <a href="javascript:void(0);" class="dropdown-item">Action</a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="inbox-widget">
-                                            <div class="inbox-item">
-                                                <div class="inbox-item-img"><img src="{% static 'assets/images/users/avatar-2.jpg' %}" class="rounded-circle" alt=""></div>
-                                                <p class="inbox-item-author">Tomaslau</p>
-                                                <p class="inbox-item-text">I've finished it! See you so...</p>
-                                                <p class="inbox-item-date">
-                                                    <a href="#" class="btn btn-sm btn-link text-info font-13"> Reply </a>
-                                                </p>
-                                            </div>
-                                            <div class="inbox-item">
-                                                <div class="inbox-item-img"><img src="{% static 'assets/images/users/avatar-3.jpg' %}" class="rounded-circle" alt=""></div>
-                                                <p class="inbox-item-author">Stillnotdavid</p>
-                                                <p class="inbox-item-text">This theme is awesome!</p>
-                                                <p class="inbox-item-date">
-                                                    <a href="#" class="btn btn-sm btn-link text-info font-13"> Reply </a>
-                                                </p>
-                                            </div>
-                                            <div class="inbox-item">
-                                                <div class="inbox-item-img"><img src="{% static 'assets/images/users/avatar-4.jpg' %}" class="rounded-circle" alt=""></div>
-                                                <p class="inbox-item-author">Kurafire</p>
-                                                <p class="inbox-item-text">Nice to meet you</p>
-                                                <p class="inbox-item-date">
-                                                    <a href="#" class="btn btn-sm btn-link text-info font-13"> Reply </a>
-                                                </p>
-                                            </div>
-
-                                            <div class="inbox-item">
-                                                <div class="inbox-item-img"><img src="{% static 'assets/images/users/avatar-5.jpg' %}" class="rounded-circle" alt=""></div>
-                                                <p class="inbox-item-author">Shahedk</p>
-                                                <p class="inbox-item-text">Hey! there I'm available...</p>
-                                                <p class="inbox-item-date">
-                                                    <a href="#" class="btn btn-sm btn-link text-info font-13"> Reply </a>
-                                                </p>
-                                            </div>
-                                            <div class="inbox-item">
-                                                <div class="inbox-item-img"><img src="{% static 'assets/images/users/avatar-6.jpg' %}" class="rounded-circle" alt=""></div>
-                                                <p class="inbox-item-author">Adhamdannaway</p>
-                                                <p class="inbox-item-text">This theme is awesome!</p>
-                                                <p class="inbox-item-date">
-                                                    <a href="#" class="btn btn-sm btn-link text-info font-13"> Reply </a>
-                                                </p>
-                                            </div>
-                                        </div> <!-- end inbox-widget -->
-                                    </div> <!-- end card-body-->
-                                </div> <!-- end card-->
+                                <!-- end card-->
 
                             </div> <!-- end col-->
 
@@ -264,7 +203,7 @@
                                                         <tbody>
                                                             <tr>
                                                                 <td>1</td>
-                                                                <td><img src="assets/images/users/avatar-2.jpg" alt="table-user" class="me-2 rounded-circle" height="24"> Halette Boivin</td>
+                                                                <td><img src="{% static 'assets/images/users/avatar-2.jpg' %}" alt="table-user" class="me-2 rounded-circle" height="24"> Halette Boivin</td>
                                                                 <td>App design and development</td>
                                                                 <td>01/01/2015</td>
                                                                 <td>10/15/2018</td>
@@ -272,7 +211,7 @@
                                                             </tr>
                                                             <tr>
                                                                 <td>2</td>
-                                                                <td><img src="assets/images/users/avatar-3.jpg" alt="table-user" class="me-2 rounded-circle" height="24"> Durandana Jolicoeur</td>
+                                                                <td><img src="{% static 'assets/images/users/avatar-3.jpg' %}" alt="table-user" class="me-2 rounded-circle" height="24"> Durandana Jolicoeur</td>
                                                                 <td>Coffee detail page - Main Page</td>
                                                                 <td>21/07/2016</td>
                                                                 <td>12/05/2018</td>
@@ -280,7 +219,7 @@
                                                             </tr>
                                                             <tr>
                                                                 <td>3</td>
-                                                                <td><img src="assets/images/users/avatar-4.jpg" alt="table-user" class="me-2 rounded-circle" height="24"> Lucas Sabourin</td>
+                                                                <td><img src="{% static 'assets/images/users/avatar-4.jpg' %}" alt="table-user" class="me-2 rounded-circle" height="24"> Lucas Sabourin</td>
                                                                 <td>Poster illustation design</td>
                                                                 <td>18/03/2018</td>
                                                                 <td>28/09/2018</td>
@@ -288,7 +227,7 @@
                                                             </tr>
                                                             <tr>
                                                                 <td>4</td>
-                                                                <td><img src="assets/images/users/avatar-6.jpg" alt="table-user" class="me-2 rounded-circle" height="24"> Donatien Brunelle</td>
+                                                                <td><img src="{% static 'assets/images/users/avatar-6.jpg' %}" alt="table-user" class="me-2 rounded-circle" height="24"> Donatien Brunelle</td>
                                                                 <td>Drinking bottle graphics</td>
                                                                 <td>02/10/2017</td>
                                                                 <td>07/05/2018</td>
@@ -296,7 +235,7 @@
                                                             </tr>
                                                             <tr>
                                                                 <td>5</td>
-                                                                <td><img src="assets/images/users/avatar-5.jpg" alt="table-user" class="me-2 rounded-circle" height="24"> Karel Auberjo</td>
+                                                                <td><img src="{% static 'assets/images/users/avatar-5.jpg' %}" alt="table-user" class="me-2 rounded-circle" height="24"> Karel Auberjo</td>
                                                                 <td>Landing page design - Home</td>
                                                                 <td>17/01/2017</td>
                                                                 <td>25/05/2021</td>
@@ -332,7 +271,7 @@
                                                 <!-- Story Box-->
                                                 <div class="border border-light rounded p-2 mb-3">
                                                     <div class="d-flex">
-                                                        <img class="me-2 rounded-circle" src="assets/images/users/avatar-3.jpg"
+                                                        <img class="me-2 rounded-circle" src="{% static 'assets/images/users/avatar-3.jpg' %}"
                                                             alt="Generic placeholder image" height="32">
                                                         <div>
                                                             <h5 class="m-0">Jeremy Tomlinson</h5>
@@ -341,11 +280,11 @@
                                                     </div>
                                                     <p>Story based around the idea of time lapse, animation to post soon!</p>
     
-                                                    <img src="assets/images/small/small-1.jpg" alt="post-img" class="rounded me-1"
+                                                    <img src="{% static 'assets/images/small/small-1.jpg' %}" alt="post-img" class="rounded me-1"
                                                         height="60" />
-                                                    <img src="assets/images/small/small-2.jpg" alt="post-img" class="rounded me-1"
+                                                    <img src="{% static 'assets/images/small/small-2.jpg' %}" alt="post-img" class="rounded me-1"
                                                         height="60" />
-                                                    <img src="assets/images/small/small-3.jpg" alt="post-img" class="rounded"
+                                                    <img src="{% static 'assets/images/small/small-3.jpg' %}" alt="post-img" class="rounded"
                                                         height="60" />
     
                                                     <div class="mt-2">
@@ -361,7 +300,7 @@
                                                 <!-- Story Box-->
                                                 <div class="border border-light rounded p-2 mb-3">
                                                     <div class="d-flex">
-                                                        <img class="me-2 rounded-circle" src="assets/images/users/avatar-4.jpg"
+                                                        <img class="me-2 rounded-circle" src="{% static 'assets/images/users/avatar-4.jpg' %}"
                                                             alt="Generic placeholder image" height="32">
                                                         <div>
                                                             <h5 class="m-0">Thelma Fridley</h5>
@@ -378,7 +317,7 @@
     
                                                     <div class="mx-n2 p-2 mt-3 bg-light">
                                                         <div class="d-flex">
-                                                            <img class="me-2 rounded-circle" src="assets/images/users/avatar-3.jpg"
+                                                            <img class="me-2 rounded-circle" src="{% static 'assets/images/users/avatar-3.jpg' %}"
                                                                 alt="Generic placeholder image" height="32">
                                                             <div>
                                                                 <h5 class="mt-0">Jeremy Tomlinson <small class="text-muted">3 hours ago</small></h5>
@@ -390,7 +329,7 @@
     
                                                                 <div class="d-flex mt-3">
                                                                     <a class="pe-2" href="#">
-                                                                        <img src="assets/images/users/avatar-4.jpg" class="rounded-circle"
+                                                                        <img src="{% static 'assets/images/users/avatar-4.jpg' %}" class="rounded-circle"
                                                                             alt="Generic placeholder image" height="32">
                                                                     </a>
                                                                     <div>
@@ -403,7 +342,7 @@
     
                                                         <div class="d-flex mt-2">
                                                             <a class="pe-2" href="#">
-                                                                <img src="assets/images/users/avatar-1.jpg" class="rounded-circle"
+                                                                <img src="{% static 'assets/images/users/avatar-1.jpg' %}" class="rounded-circle"
                                                                     alt="Generic placeholder image" height="32">
                                                             </a>
                                                             <div class="w-100">
@@ -423,7 +362,7 @@
                                                 <!-- Story Box-->
                                                 <div class="border border-light p-2 mb-3">
                                                     <div class="d-flex">
-                                                        <img class="me-2 rounded-circle" src="assets/images/users/avatar-6.jpg"
+                                                        <img class="me-2 rounded-circle" src="{% static 'assets/images/users/avatar-6.jpg' %}"
                                                             alt="Generic placeholder image" height="32">
                                                         <div>
                                                             <h5 class="m-0">Martin Williamson</h5>
