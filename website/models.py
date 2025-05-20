@@ -6,7 +6,7 @@ from django.dispatch import receiver
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     email_token = models.CharField(max_length=100, default='', blank=True)
-    #created_at = models.DateTimeField(auto_now_add=True)  # optional tracking
+      # optional tracking
     #updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -83,7 +83,7 @@ class UserExperience(models.Model):
     job_designation = models.TextField(null=True, blank=True)
     joining_date = models.DateField(null=True, blank=True)
     leaving_date = models.DateField(null=True, blank=True)
-    timestamp = models.DateTimeField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.job_name or f"Experience {self.id}"
@@ -100,6 +100,8 @@ class UserProfile(models.Model):
     status = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(null=True, blank=True)
     modified_at = models.DateTimeField(null=True, blank=True)
+    image_name = models.TextField(null=True, blank=True)
+    image_path = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.f_name or ''} {self.l_name or ''}".strip()
@@ -112,7 +114,6 @@ class Link(models.Model):
     ref_id = models.BigIntegerField(null=True, blank=True)
     status = models.IntegerField(null=True, blank=True)
     link = models.TextField(null=True, blank=True)
-    timestamp = models.DateTimeField(null=True, blank=True)
-
+    timestamp = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name or f"Link {self.id}"
