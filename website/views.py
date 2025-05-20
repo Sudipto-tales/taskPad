@@ -296,3 +296,7 @@ def task_create(request):
 def chat_index(request):
     title = "Chat"
     return render(request, 'chats/index.html', {'title': title})
+
+@login_required
+def profile_view(request):
+    return render(request, 'profile/profile.html')

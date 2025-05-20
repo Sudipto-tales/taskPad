@@ -4,7 +4,7 @@ home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
 project_index,project_create,
 task_index,task_create,
-chat_index)
+chat_index,profile_view)
 
 urlpatterns = [
 
@@ -36,4 +36,5 @@ path('projects/create/', project_create, name='projects.create'),
 
 
 path('chats/', chat_index, name='chats'),
+path('profile_view/', profile_view, name='profile_view'),
 ]

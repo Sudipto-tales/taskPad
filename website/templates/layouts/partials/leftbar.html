@@ -2,13 +2,13 @@
 <!-- ========== Left Sidebar Start ========== -->
 <div class="leftside-menu">
   <!-- Brand Logo Light -->
-  <a href="index.html" class="logo logo-light">
+  <a href="{% static 'index.html' %}" class="logo logo-light">
     <span class="logo-lg"><h3 class="app-logo">{{ app_name }}</h3></span>
     <span class="logo-sm"><h3 class="app-logo">{{ app_name }}</h3></span>
   </a>
 
   <!-- Brand Logo Dark -->
-  <a href="index.html" class="logo logo-dark">
+  <a href="{% static 'index.html' %}" class="logo logo-dark">
     <span class="logo-lg"><h3 class="app-logo">{{ app_name }}</h3></span>
     <span class="logo-sm"><h3 class="app-logo">{{ app_name }}</h3></span>
   </a>
@@ -41,6 +41,12 @@
         <a href="{% url 'dashboard' %}" class="side-nav-link">
           <i class="uil-home-alt"></i>
           <span>Dashboards</span>
+        </a>
+      </li>
+      <li class="side-nav-item">
+        <a href="{% url 'profile_view' %}" class="side-nav-link">
+          <i class="uil-home-alt"></i>
+          <span>Profile</span>
         </a>
       </li>
 
