@@ -32,6 +32,7 @@
                       <label for="project-overview" class="form-label">Overview</label>
                       <textarea class="form-control" id="project-overview" rows="5" placeholder="Enter some brief about project.."></textarea>
                     </div>
+                    
                     <div class="mb-3">
                       <label for="priority" class="form-label">Priority</label>
                       <select id="priority" class="form-select" required>
@@ -42,7 +43,7 @@
                     </div>
                     <div class="mb-3">
                       <label for="status" class="form-label">Status</label>
-                      <select id="status" class="form-select" required>
+                      <select id="priority" class="form-select" required>
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
                         <option value="2">Purged</option>
@@ -128,8 +129,13 @@
                       <label class="form-label">Due Date</label>
                       <input type="text" class="form-control" data-provide="datepicker" data-date-container="#datepicker2" data-date-format="d-M-yyyy" data-date-autoclose="true" />
                     </div>
+                    
+
                   </div> <!-- end col -->
                 </div>
+                <div class="mt-3 text-end">
+                     <button type="submit" class="btn btn-primary">Create Task</button>
+                     </div>
                 <!-- end row -->
               </div> <!-- end card-body -->
             </div> <!-- end card -->

@@ -10,9 +10,11 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
-
+from .models import Task
 from .models import Profile, Role, Users_to_Roles, Teams, Projects
 from django.contrib.auth.decorators import login_required
+
+
 
 # Show registration form
 def register_view(request):
@@ -306,3 +308,36 @@ def chat_index(request):
 def profile_view(request):
     title = "Profile"
     return render(request, 'profile/index.html', {'title': title})
+
+
+@login_required
+def add_task(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        title = request.POST.get('projectname')  # From input field ID
+        overview = request.POST.get('project-overview')
+        priority = request.POST.get('priority')
+        status = request.POST.get('status')
+        assigned_to_username = request.POST.get('assigned_to')
+        start_date = request.POST.get('start_date')
+        due_date = request.POST.get('due_date')
+        image = request.FILES.get('image')
+
+        assigned_user = User.objects.filter(username=assigned_to_username).first()
+
+        Task.objects.create(
+            title=title,
+            name=name,
+            description=overview,
+            priority=priority,
+            status=status,
+            assigned_to=assigned_user,
+            start_date=start_date,
+            due_date=due_date,
+            created_by=request.user,
+            image=image
+        )
+        return redirect('task_list')
+
+    users = User.objects.all()
+    return render(request, 'tasks/create.html', {'users': users})

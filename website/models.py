@@ -114,6 +114,19 @@ class Link(models.Model):
     ref_id = models.BigIntegerField(null=True, blank=True)
     status = models.IntegerField(null=True, blank=True)
     link = models.TextField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return self.name or f"Link {self.id}"
+
+class Task(models.Model):
+    name = models.CharField(max_length=200, null=True, blank=True)
+    project_name = models.CharField(max_length=200)
+    overview = models.TextField()
+    priority = models.CharField(max_length=50)
+    status = models.CharField(max_length=50)
+    team_member = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='team_member')
+    start_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    image = models.ImageField( null=True, blank=True)
+    def __str__(self):
+        return self.title
