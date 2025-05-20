@@ -73,3 +73,46 @@ class ProjectsTable(models.Model):
 
     def __str__(self):
         return self.name      
+
+
+
+class UserExperience(models.Model):
+    job_name = models.TextField(null=True, blank=True)
+    job_desc = models.TextField(null=True, blank=True)
+    company_link = models.TextField(null=True, blank=True)
+    job_designation = models.TextField(null=True, blank=True)
+    joining_date = models.DateField(null=True, blank=True)
+    leaving_date = models.DateField(null=True, blank=True)
+    timestamp = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.job_name or f"Experience {self.id}"
+
+
+class UserProfile(models.Model):
+    f_name = models.CharField(max_length=255, null=True, blank=True)
+    l_name = models.CharField(max_length=255, null=True, blank=True)
+    user_id = models.BigIntegerField(null=True, blank=True)
+    bio = models.TextField(null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    adress = models.TextField(null=True, blank=True)
+    experience_id = models.BigIntegerField(null=True, blank=True)
+    status = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(null=True, blank=True)
+    modified_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.f_name or ''} {self.l_name or ''}".strip()
+
+
+class Link(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    type = models.TextField(null=True, blank=True)
+    user_id = models.BigIntegerField(null=True, blank=True)
+    ref_id = models.BigIntegerField(null=True, blank=True)
+    status = models.IntegerField(null=True, blank=True)
+    link = models.TextField(null=True, blank=True)
+    timestamp = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name or f"Link {self.id}"
