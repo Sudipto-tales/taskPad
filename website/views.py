@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 import uuid
@@ -98,6 +98,11 @@ def login(request):
 
     return render(request, 'authentication/login.html')
 
+@login_required
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('login')
 
 # Dashboard view after login
 @login_required

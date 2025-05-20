@@ -4,7 +4,7 @@ home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
 project_index,project_create,
 task_index,task_create,
-chat_index,profile_view)
+chat_index,profile_view,logout_view)
 
 urlpatterns = [
 
@@ -14,7 +14,7 @@ path('login/', login_view, name='login'),
 path('sign_in/', login, name='sign_in'),
 path('dashboard/', home, name='dashboard'),
 path('verify/<str:token>/', verify_email, name='verify_email'),
-
+path('logout/', logout_view, name='logout'),
 #Admin Paths
 path('users/', admin_user, name='users'),
 path('user/update/<int:id>', update_user, name='update_user'),
