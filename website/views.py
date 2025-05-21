@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Task
 from .models import Profile, Role, Users_to_Roles, Teams, Projects
 from django.contrib.auth.decorators import login_required
-
+from .models import ProjectsTable
 
 
 # Show registration form
@@ -341,3 +341,67 @@ def add_task(request):
 
     users = User.objects.all()
     return render(request, 'tasks/create.html', {'users': users})
+
+
+
+
+
+@login_required
+def project_list(request):
+    projects = ProjectsTable.objects.all().order_by('-timestamp')
+    tasks = Task.objects.select_related('category').all()
+    tasks_by_project = {}
+
+    for task in tasks:
+        tasks_by_project.setdefault(task.category_id, []).append(task)
+
+    return render(request, 'project/index.html', {
+        'projects_data': projects,
+        'tasks_by_project': tasks_by_project
+    })
+
+@login_required
+def create_project(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        status = request.POST.get('status')
+        due_date = request.POST.get('due_date')
+        img_path = request.FILES.get('img_path')
+
+        project = ProjectsTable.objects.create(
+            name=name,
+            description=description,
+            status=int(status),
+            due_date=due_date,
+            img_path=img_path,
+            created_by=request.user.id
+        )
+        messages.success(request, "Project created successfully.")
+        return redirect('project_list')
+
+
+@login_required
+def edit_project(request, pk):
+    project = get_object_or_404(ProjectsTable, pk=pk)
+
+    if request.method == 'POST':
+        project.name = request.POST.get('name')
+        project.description = request.POST.get('description')
+        project.status = int(request.POST.get('status'))
+        project.due_date = request.POST.get('due_date')
+
+        if request.FILES.get('img_path'):
+            project.img_path = request.FILES['img_path']
+
+        project.save()
+        messages.success(request, "Project updated successfully.")
+        return redirect('project_list')
+
+
+@login_required
+def delete_project(request, pk):
+    project = get_object_or_404(ProjectsTable, pk=pk)
+    project.delete()
+    messages.success(request, "Project deleted successfully.")
+    return redirect('project_list')

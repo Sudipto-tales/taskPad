@@ -1,47 +1,41 @@
-<div class="modal fade team-modal-content" id="add-new-team-modal" tabindex="-1" role="dialog" aria-labelledby="NewTeamModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="NewTeamModalLabel">Add New Team</h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="create-team-form" class="p-2" method="post">
-          {% csrf_token %}
+{% extends 'layouts/app.html' %}
+{% load static %}
 
-          <div class="mb-3">
-            <label class="form-label">Team Name</label>
-            <input type="text" class="form-control form-control-light" name="team_name" placeholder="Enter team name" required />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select class="form-select form-control-light" name="status" required>
-              <option value="">-- Select Status --</option>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Members</label>
-            <select class="form-select" name="members" multiple>
-              {% for user in users %}
-                <option value="{{ user.id }}">{{ user.first_name }}</option>
-              {% endfor %}
-            </select>
-            <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple members.</small>
-          </div>
-
-          <div class="text-end">
-            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create Team</button>
-          </div>
-        </form>
-      </div>
+{% block content %}
+<div class="container mb-5">
+  <h2>Create New Project</h2>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label>Name</label>
+      <input type="text" name="name" class="form-control" required>
     </div>
-  </div>
+    <div class="mb-3">
+      <label>Description</label>
+      <textarea name="description" class="form-control"></textarea>
+    </div>
+    <div class="mb-3">
+      <label>Status</label>
+      <select name="status" class="form-control" required>
+        <option value="1">Pending</option>
+        <option value="0">Complete</option>
+        <option value="2">Purged</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label>Due Date</label>
+      <input type="date" name="due_date" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label>Image</label>
+      <input type="file" name="img_path" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-success">Create</button>
+    <a href="{% url 'create_project' %}" class="btn btn-secondary">Cancel</a>
+  </form>
 </div>
+{% endblock %}
+
 
 <script>
 document.getElementById('create-team-form').addEventListener('submit', function (e) {
