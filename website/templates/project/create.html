@@ -1,47 +1,74 @@
-<div class="modal fade team-modal-content" id="add-new-team-modal" tabindex="-1" role="dialog" aria-labelledby="NewTeamModalLabel" aria-hidden="true">
+<div class="modal fade" id="add-new-project-modal" tabindex="-1" role="dialog" aria-labelledby="NewProjectModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="NewTeamModalLabel">Add New Team</h4>
+        <h4 class="modal-title" id="NewProjectModalLabel">Add New Project</h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="create-team-form" class="p-2" method="post">
+        <form id="create-project-form" class="p-2" method="post" enctype="multipart/form-data" action="{% url 'create_project' %}">
+
           {% csrf_token %}
 
           <div class="mb-3">
-            <label class="form-label">Team Name</label>
-            <input type="text" class="form-control form-control-light" name="team_name" placeholder="Enter team name" required />
+            <label class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="project_name" placeholder="Enter project name" required />
+          </div>
+
+          <div class="mb-3">
+            <label>Description</label>
+            <textarea name="description" class="form-control"></textarea>
           </div>
 
           <div class="mb-3">
             <label class="form-label">Status</label>
-            <select class="form-select form-control-light" name="status" required>
-              <option value="">-- Select Status --</option>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
+            <select class="form-select" name="status" required>
+              <option value="1">Pending</option>
+              <option value="0">Ongoing</option>
+              <option value="2">Complete</option>
             </select>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Members</label>
-            <select class="form-select" name="members" multiple>
+            <label for="created_by" class="form-label">Created By</label>
+            <select class="form-select" name="created_by" id="created_by">
               {% for user in users %}
-                <option value="{{ user.id }}">{{ user.first_name }}</option>
+                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
               {% endfor %}
             </select>
-            <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple members.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="img_path" class="form-label">Project Image</label>
+            <input type="file" class="form-control" name="img_path" id="img_path">
+          </div>
+
+          <div class="mb-3">
+            <label for="img_name" class="form-label">Image Name</label>
+            <input type="text" class="form-control" name="img_name" id="img_name">
+          </div>
+
+          <div class="col-md-6">
+            <label>Due Date</label>
+            <input type="date" name="due_date" class="form-control">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="timestamp" class="form-label">Time</label>
+            <input type="time" class="form-control" name="timestamp" id="timestamp" required>
           </div>
 
           <div class="text-end">
             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Create Team</button>
+            <button type="submit" class="btn btn-primary">Create Project</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+
 
 <script>
 document.getElementById('create-team-form').addEventListener('submit', function (e) {

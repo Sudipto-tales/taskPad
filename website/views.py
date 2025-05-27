@@ -11,8 +11,10 @@ from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Role, Users_to_Roles, Teams, Projects
+from .models import Profile, Role, Users_to_Roles, Teams,ProjectsTable
 from django.contrib.auth.decorators import login_required
+
+
 
 # Show registration form
 def register_view(request):
@@ -306,3 +308,95 @@ def chat_index(request):
 def profile_view(request):
     title = "Profile"
     return render(request, 'profile/index.html', {'title': title})
+
+
+@login_required
+def add_task(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        title = request.POST.get('projectname')  # From input field ID
+        overview = request.POST.get('project-overview')
+        priority = request.POST.get('priority')
+        status = request.POST.get('status')
+        assigned_to_username = request.POST.get('assigned_to')
+        start_date = request.POST.get('start_date')
+        due_date = request.POST.get('due_date')
+        image = request.FILES.get('image')
+
+        assigned_user = User.objects.filter(username=assigned_to_username).first()
+
+        Task.objects.create(
+            title=title,
+            name=name,
+            description=overview,
+            priority=priority,
+            status=status,
+            assigned_to=assigned_user,
+            start_date=start_date,
+            due_date=due_date,
+            created_by=request.user,
+            image=image
+        )
+        return redirect('task_list')
+
+    users = User.objects.all()
+    return render(request, 'tasks/create.html', {'users': users})
+
+@login_required
+def project_list(request):
+    projects = ProjectsTable.objects.all()
+    users = User.objects.all()  # Needed for dropdowns in modals
+    return render(request, 'project/index.html', {
+        'projects': projects,
+        'users': users
+    })
+
+@login_required
+def create_project(request):
+    if request.method == 'POST':
+        name = request.POST.get('project_name')
+        description = request.POST.get('description')
+        status = request.POST.get('status')
+        created_by = User.objects.get(id=request.POST.get('created_by'))
+        img_name = request.POST.get('img_name')
+        img_path = request.FILES.get('img_path')
+        due_date = request.POST.get('due_date')
+        timestamp = request.POST.get('timestamp')
+
+        ProjectsTable.objects.create(
+            name=name,
+            description=description,
+            status=status,
+            created_by=created_by,
+            img_name=img_name,
+            img_path=img_path,
+            due_date=due_date,
+            timestamp=timestamp
+        )
+        return redirect('project_list')  # or your view name
+
+
+@login_required
+def edit_project(request, pk):
+    project = get_object_or_404(ProjectsTable, pk=pk)
+
+    if request.method == 'POST':
+        project.name = request.POST.get('name')
+        project.description = request.POST.get('description')
+        project.status = int(request.POST.get('status'))
+        project.due_date = request.POST.get('due_date')
+
+        if request.FILES.get('img_path'):
+            project.img_path = request.FILES['img_path']
+
+        project.save()
+        messages.success(request, "Project updated successfully.")
+        return redirect('project_list')
+
+
+@login_required
+def delete_project(request, pk):
+    project = get_object_or_404(ProjectsTable, pk=pk)
+    project.delete()
+    messages.success(request, "Project deleted successfully.")
+    return redirect('project_list')

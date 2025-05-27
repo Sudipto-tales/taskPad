@@ -1,45 +1,78 @@
-<div class="modal fade" id="edit-team-modal" tabindex="-1" role="dialog" aria-labelledby="editTeamModalLabel" aria-hidden="true">
+<div class="modal fade" id="edit-project-modal" tabindex="-1" role="dialog" aria-labelledby="editProjectModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
-      <form id="edit-team-form-{{ team.id }}" method="post">
+      <form method="post" enctype="multipart/form-data" action="{% url 'edit_project' project.id %}">
+
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="editTeamModalLabel{{ team.id }}">Edit Team - {{ team.name }}</h5>
+          <h5 class="modal-title" id="editProjectModalLabel{{ project.id }}">Edit Project - {{ project.name }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Team Name</label>
-            <input type="text" class="form-control" name="team_name" value="{{ team.name }}" required>
+        <div class="row p-3">
+          <div class="col-md-6 mb-3">
+            <label for="project_name" class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="project_name" id="project_name" value="{{ project.name }}" required>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select class="form-select" name="status">
-              <option value="1" {% if team.status == 1 %}selected{% endif %}>Active</option>
-              <option value="0" {% if team.status == 0 %}selected{% endif %}>Inactive</option>
+          <div class="col-md-6 mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" name="status" id="status" required>
+              <option value="1" {% if project.status == 1 %}selected{% endif %}>Pending</option>
+              <option value="0" {% if project.status == 0 %}selected{% endif %}>Ongoing</option>
+              <option value="2" {% if project.status == 2 %}selected{% endif %}>Complete</option>
             </select>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Members</label>
-            <select class="form-select" name="members" multiple>
+          <div class="col-md-12 mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" name="description" id="description" rows="4">{{ project.description }}</textarea>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="created_by" class="form-label">Created By</label>
+            <select class="form-select" name="created_by" id="created_by">
               {% for user in users %}
-                <option value="{{ user.id }}">{{ user.first_name }}</option>
+                <option value="{{ user.username }}" {% if project.created_by.username == user.username %}selected{% endif %}>
+                  {{ user.get_full_name|default:user.username }}
+                </option>
               {% endfor %}
             </select>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="img_name" class="form-label">Image Name</label>
+            <input type="text" class="form-control" name="img_name" id="img_name" value="{{ project.img_name }}">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="img_path" class="form-label">Project Image</label>
+            {% if project.img_path %}
+              <img src="{{ project.img_path.url }}" alt="Project Image" class="img-thumbnail mb-2" width="100">
+            {% endif %}
+            <input type="file" class="form-control" name="img_path" id="img_path">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="due_date" class="form-label">Due Date</label>
+            <input type="date" class="form-control" name="due_date" id="due_date" value="{{ project.due_date|date:'Y-m-d' }}">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="timestamp" class="form-label">Time</label>
+            <input type="time" class="form-control" name="timestamp" id="timestamp" value="{{ project.timestamp|time:'H:i' }}">
           </div>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Team</button>
+          <button type="submit" class="btn btn-primary">Update Project</button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
 
 <script>
 document.querySelectorAll("form[id^='edit-team-form-']").forEach(function(form) {

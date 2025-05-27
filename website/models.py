@@ -50,26 +50,23 @@ class Teams(models.Model):
     def __str__(self):
         return self.name
     
-class Projects(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.CharField(max_length=500)
-    status = models.IntegerField(default=1)
-    created_by = models.BigIntegerField()
-    due_date = models.DateField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name    
-
 class ProjectsTable(models.Model):
+    STATUS_CHOICES = (
+        (0, 'Ongoing'),
+        (1, 'Pending'),
+        (2, 'Complete'),
+    )
+
     name = models.CharField(max_length=255)
-    description = models.CharField(null=True,max_length=500)
-    status = models.IntegerField(default=1)
-    created_by = models.BigIntegerField()
-    img_name = models.CharField(max_length=255,null=True, blank=True)
-    img_path = models.ImageField(null=True, blank=True)
-    due_date = models.DateField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True, null=True)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    img_path = models.ImageField(upload_to='project_images/', blank=True, null=True)
+    img_name = models.CharField(max_length=255, blank=True, null=True)
+    due_date = models.DateField(auto_now_add=True)
+    timestamp = models.TimeField(blank=True, null=True) 
 
     def __str__(self):
-        return self.name      
+        return self.name
+
+      
