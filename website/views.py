@@ -352,7 +352,7 @@ def project_list(request):
     })
 
 @login_required
-def create_project(request):
+def project_create(request):
     if request.method == 'POST':
         name = request.POST.get('project_name')
         description = request.POST.get('description')

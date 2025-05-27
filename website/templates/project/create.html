@@ -6,7 +6,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="create-project-form" class="p-2" method="post" enctype="multipart/form-data" action="{% url 'create_project' %}">
+        <form id="create-project-form" class="p-2" method="post" enctype="multipart/form-data" action="#">
 
           {% csrf_token %}
 
