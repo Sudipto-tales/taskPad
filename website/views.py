@@ -11,8 +11,12 @@ from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Role, Users_to_Roles, Teams, Projects
+from .models import Profile, Role, Users_to_Roles, Teams, Project,TaskFile,Task
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.utils.dateparse import parse_date
+
+@csrf_exempt
 
 # Show registration form
 def register_view(request):
@@ -295,7 +299,11 @@ def task_index(request):
 @login_required
 def task_create(request):
     title = "Tasks Create"
-    return render(request, 'tasks/create.html', {'title': title})
+    users = User.objects.all()
+    projects = Project.objects.all()
+    teams = Teams.objects.all()
+
+    return render(request, 'tasks/create.html', {'title': title,'users':users,'projects':projects,'teams':teams})
 
 @login_required
 def chat_index(request):
@@ -306,3 +314,62 @@ def chat_index(request):
 def profile_view(request):
     title = "Profile"
     return render(request, 'profile/index.html', {'title': title})
+
+
+def store_task(request):
+    if request.method == 'POST':
+        print("Received POST request")
+
+        try:
+            print("Starting to process form data")
+
+            project_id = request.POST.get('project_id')
+            name = request.POST.get('name')
+            overview = request.POST.get('overview')
+            priority = request.POST.get('priority')
+            status = request.POST.get('status',1)
+            assign_user_id = request.POST.get('assign_user')
+            assign_team_id = request.POST.get('assign_team')
+            start_date = parse_date(request.POST.get('start_date'))
+            due_date = parse_date(request.POST.get('due_date'))
+
+            print(f"Project ID: {project_id}, Name: {name}, Priority: {priority}")
+
+            project = Project.objects.get(id=project_id) if project_id else None
+            assign_user = User.objects.get(id=assign_user_id) if assign_user_id else None
+            assign_team = Teams.objects.get(id=assign_team_id) if assign_team_id else None
+
+            print("Creating task...")
+
+            task = Task.objects.create(
+                project=project,
+                name=name,
+                overview=overview,
+                priority=priority,
+                status=status,
+                assign_user=assign_user,
+                assign_team=assign_team,
+                assign_by=request.user,
+                created_by=request.user,
+                start_date=start_date,
+                due_date=due_date
+            )
+
+            print(f"Task created: {task.id}")
+
+            if request.FILES:
+                print("Processing uploaded files...")
+                for f in request.FILES.getlist('file'):
+                    task_file = TaskFile.objects.create(task=task, file=f)
+                    file_url = request.build_absolute_uri(task_file.file.url)
+                    print("Uploaded file URL:", file_url)
+
+            messages.success(request, "Task created successfully.")
+            return redirect('tasks')
+
+        except Exception as e:
+            print("Exception occurred:", str(e))  # Print the real error
+            messages.error(request, f"Something went wrong: {e}")
+            return redirect('tasks.create')
+
+    print("Rendering form via GET request")

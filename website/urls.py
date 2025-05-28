@@ -3,7 +3,7 @@ from .views import (register_view, register,login , verify_email, login_view,
 home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
 project_index,project_create,
-task_index,task_create,
+task_index,task_create,store_task,
 chat_index,profile_view,logout_view)
 
 urlpatterns = [
@@ -26,9 +26,10 @@ path('teams/delete/<int:team_id>/', delete_team, name='delete_team'),
 path('teams/update/<int:team_id>/', update_team, name='update_team'),
 path('teams/create/', create_team, name='create_team'),
 
-#Tasks Paths
+# urls.py
 path('tasks/', task_index, name='tasks'),
 path('tasks/create/', task_create, name='tasks.create'),
+path('store_task/', store_task, name='store_task'),  # <-- fixed
 
 #Projects Paths
 path('projects/', project_index, name='projects'),
