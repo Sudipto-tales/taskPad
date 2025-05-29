@@ -342,17 +342,22 @@ def add_task(request):
     users = User.objects.all()
     return render(request, 'tasks/create.html', {'users': users})
 
+# Project List View
 @login_required
 def project_list(request):
     projects = ProjectsTable.objects.all()
-    users = User.objects.all()  # Needed for dropdowns in modals
+    users = User.objects.all()
     return render(request, 'project/index.html', {
+        'title': 'Projects',
         'projects': projects,
         'users': users
     })
 
+# Create Project View
+
+
 @login_required
-def project_create(request):
+def create_project(request):
     if request.method == 'POST':
         name = request.POST.get('project_name')
         description = request.POST.get('description')
@@ -363,7 +368,7 @@ def project_create(request):
         due_date = request.POST.get('due_date')
         timestamp = request.POST.get('timestamp')
 
-        ProjectsTable.objects.create(
+        project = ProjectsTable.objects.create(
             name=name,
             description=description,
             status=status,
@@ -373,27 +378,49 @@ def project_create(request):
             due_date=due_date,
             timestamp=timestamp
         )
-        return redirect('project_list')  # or your view name
 
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Project created successfully.'})
+        
+        return redirect('projects')
+
+    users = User.objects.all()
+    return render(request, 'project/create.html', {
+        'title': 'Create Project',
+        'users': users
+    })
+
+
+# Edit Project View
 
 @login_required
 def edit_project(request, pk):
     project = get_object_or_404(ProjectsTable, pk=pk)
 
     if request.method == 'POST':
-        project.name = request.POST.get('name')
+        project.name = request.POST.get('project_name')
         project.description = request.POST.get('description')
-        project.status = int(request.POST.get('status'))
-        project.due_date = request.POST.get('due_date')
+        project.status = request.POST.get('status')
+        created_by_username = request.POST.get('created_by')
+        project.created_by = User.objects.get(username=created_by_username)
+        project.img_name = request.POST.get('img_name')
 
         if request.FILES.get('img_path'):
-            project.img_path = request.FILES['img_path']
+            project.img_path = request.FILES.get('img_path')
 
+        project.due_date = request.POST.get('due_date')
+        project.timestamp = request.POST.get('timestamp')
         project.save()
-        messages.success(request, "Project updated successfully.")
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Project updated successfully.'})
         return redirect('project_list')
 
+    users = User.objects.all()
+    return render(request, 'project/edit.html', {'project': project, 'users': users})
 
+
+# Delete Project View
 @login_required
 def delete_project(request, pk):
     project = get_object_or_404(ProjectsTable, pk=pk)

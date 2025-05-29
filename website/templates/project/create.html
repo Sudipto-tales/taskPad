@@ -6,9 +6,9 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="create-project-form" class="p-2" method="post" enctype="multipart/form-data" action="#">
+       <form method="post" enctype="multipart/form-data" action="{% url 'projects.create' %}">
 
-          {% csrf_token %}
+  {% csrf_token %}
 
           <div class="mb-3">
             <label class="form-label">Project Name</label>
@@ -71,13 +71,13 @@
 
 
 <script>
-document.getElementById('create-team-form').addEventListener('submit', function (e) {
+document.getElementById('create-project-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
     const form = e.target;
     const formData = new FormData(form);
 
-    fetch("{% url 'create_team' %}", {
+    fetch("{% url 'projects.create' %}", {
         method: 'POST',
         headers: {
             'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
@@ -88,8 +88,8 @@ document.getElementById('create-team-form').addEventListener('submit', function 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message); // or use a toast
-            location.reload();   // refresh the page to show the new team
+            alert(data.message);
+            location.reload();
         } else {
             alert('Error: ' + data.message);
         }
@@ -100,3 +100,4 @@ document.getElementById('create-team-form').addEventListener('submit', function 
     });
 });
 </script>
+

@@ -1,7 +1,8 @@
 <div class="modal fade" id="edit-project-modal" tabindex="-1" role="dialog" aria-labelledby="editProjectModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
-      <form method="post" enctype="multipart/form-data" action="{% url 'edit_project' project.id %}">
+     <form id="edit-project-form-{{ project.id }}" method="post" enctype="multipart/form-data" action="{% url 'edit_project' project.id %}">
+
 
         {% csrf_token %}
         <div class="modal-header">
@@ -75,14 +76,14 @@
 
 
 <script>
-document.querySelectorAll("form[id^='edit-team-form-']").forEach(function(form) {
+document.querySelectorAll("form[id^='edit-project-form-']").forEach(function(form) {
   form.addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const teamId = form.id.replace('edit-team-form-', '');
+    const projectId = form.id.replace('edit-project-form-', '');
     const formData = new FormData(form);
 
-    fetch(`/update-team/${teamId}/`, {
+    fetch(`/projects/edit/${projectId}/`, {
       method: 'POST',
       headers: {
         'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
@@ -94,7 +95,7 @@ document.querySelectorAll("form[id^='edit-team-form-']").forEach(function(form) 
     .then(data => {
       if (data.success) {
         alert(data.message);
-        location.reload();
+        location.reload();  // refresh to reflect updates
       } else {
         alert('Error: ' + data.message);
       }
@@ -106,3 +107,4 @@ document.querySelectorAll("form[id^='edit-team-form-']").forEach(function(form) 
   });
 });
 </script>
+

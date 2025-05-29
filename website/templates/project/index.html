@@ -10,84 +10,147 @@
       <div class="row">
         <div class="card">
           <div class="card-body">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#add-new-project-modal" class="btn btn-success btn-sm ms-3">Add New</a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#add-new-project-modal" class="btn btn-success btn-sm mb-3">Add New Project</a>
 
-            <div class="tab-content mt-3">
-              <div class="tab-pane show active" id="striped-rows-preview">
-                <div class="table-responsive-sm">
-                  <table class="table table-striped table-centered mb-0">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Project Name</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Created By</th>
-                        
-                        <th>Image Name</th>
-                        <th>Due Date</th>
-                        <th>Timestamp</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for project in projects %}
-                      <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ project.name }}</td>
-                        <td>{{ project.description }}</td>
-                        <td>
-                          {% if project.status == 1 %}
-                            <span class="badge bg-warning">Pending</span>
-                          {% elif project.status == 0 %}
-                            <span class="badge bg-info">Ongoing</span>
-                          {% elif project.status == 2 %}
-                            <span class="badge bg-success">Complete</span>
-                          {% else %}
-                            <span class="badge bg-secondary">Unknown</span>
-                          {% endif %}
-                        </td>
-                        <td>{{ project.created_by }}</td>
-                        <td>
-                          {% if project.img_path %}
-                            <img src="{{ project.img_path.url }}" alt="Project Image" width="60">
-                          {% else %}
-                            No image
-                          {% endif %}
-                        </td>
-                        <td>{{ project.img_name }}</td>
-                        <td>{{ project.due_date }}</td>
-                        <td>{{ project.timestamp|time:"H:i" }}</td>
-                        <td class="table-action">
-                          <a href="#" data-bs-toggle="modal" data-bs-target="#edit-project-modal-{{ project.id }}" class="action-icon"><i class="mdi mdi-pencil"></i></a>
-                          <a href="{% url 'delete_project' project.id %}" class="action-icon"><i class="mdi mdi-delete"></i></a>
+            <div class="table-responsive-sm">
+              <table class="table table-striped table-centered mb-0">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Project Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th>Image</th>
+                    <th>Image Name</th>
+                    <th>Due Date</th>
+                    <th>Timestamp</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for project in projects %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ project.name }}</td>
+                    <td>{{ project.description|truncatechars:50 }}</td>
+                    <td>
+                      {% if project.status == 1 %}
+                        <span class="badge bg-warning">Pending</span>
+                      {% elif project.status == 0 %}
+                        <span class="badge bg-info">Ongoing</span>
+                      {% elif project.status == 2 %}
+                        <span class="badge bg-success">Complete</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Unknown</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ project.created_by }}</td>
+                    <td>
+                      {% if project.img_path %}
+                        <img src="{{ project.img_path.url }}" alt="Image" width="60">
+                      {% else %}
+                        No image
+                      {% endif %}
+                    </td>
+                    <td>{{ project.img_name }}</td>
+                    <td>{{ project.due_date }}</td>
+                    <td>{{ project.timestamp|time:"H:i" }}</td>
+                    <td>
+                      <a href="#" data-bs-toggle="modal" data-bs-target="#edit-project-modal-{{ project.id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="mdi mdi-pencil"></i>
+                      </a>
+                      <a href="{% url 'delete_project' project.id %}" class="btn btn-sm btn-outline-danger">
+                        <i class="mdi mdi-delete"></i>
+                      </a>
+                    </td>
+                  </tr>
 
-                        </td>
-                      </tr>
-
-                      <!-- Include project-specific edit modal -->
-                      {% include 'project/edit.html' with project=project users=users %}
-                      {% endfor %}
-                      
-                      <tr>
-                        <td colspan="10" class="text-center">No Projects found.</td>
-                      </tr>
-                      
-                    </tbody>
-                  </table>
-                </div> <!-- end table-responsive -->
-              </div> <!-- end preview -->
-            </div> <!-- end tab-content -->
-          </div> <!-- end card body -->
-        </div> <!-- end card -->
+                  {% include 'project/edit.html' with project=project users=users %}
+                  {% empty %}
+                  <tr>
+                    <td colspan="10" class="text-center">No projects found.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
 
+<!-- Create Project Modal -->
 {% include 'project/create.html' %}
-
 {% endblock %}
 
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- AJAX Create Form -->
+<script>
+document.getElementById('create-project-form')?.addEventListener('submit', function (e) {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+
+  fetch("{% url 'projects.create' %}", {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert('Error: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An unexpected error occurred.');
+  });
+});
+</script>
+
+<!-- AJAX Edit Forms -->
+<script>
+document.querySelectorAll("form[id^='edit-project-form-']").forEach(form => {
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const projectId = form.id.replace('edit-project-form-', '');
+    const formData = new FormData(form);
+
+    fetch(`/projects/edit/${projectId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An unexpected error occurred.');
+    });
+  });
+});
+</script>
+{% endblock %}
