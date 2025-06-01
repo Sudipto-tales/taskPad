@@ -337,4 +337,19 @@ class WorkExperience(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.job_title} at {self.website_name} ({self.start_year} - {self.end_year or 'Present'})"       
+        return f"{self.job_title} at {self.website_name} ({self.start_year} - {self.end_year or 'Present'})"    
+    
+class Chat(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='chats',
+        null=True,
+        blank=True
+    )    
+    msg = models.TextField(null=True, blank=True)
+    timestamp = models.DateTimeField(null=True, blank=True)
+    status = models.PositiveSmallIntegerField(null=True, blank=True)  # For TinyInteger equivalent
+
+    def __str__(self):
+        return f"Chat by {self.user} at {self.timestamp or 'N/A'}"       

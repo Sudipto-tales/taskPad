@@ -11,7 +11,7 @@ from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Role, Users_to_Roles,WorkExperience, Teams, Project,TaskFile,Task,TaskComment,UserProfile, CompanyDetail, SocialMediaDetail
+from .models import Profile, Role, Users_to_Roles,WorkExperience, Chat,Teams, Project,TaskFile,Task,TaskComment,UserProfile, CompanyDetail, SocialMediaDetail
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
@@ -709,7 +709,11 @@ def upload_task_file(request, task_id):
 @login_required
 def chat_index(request):
     title = "Chat"
-    return render(request, 'chats/index.html', {'title': title})
+    # select_related('user') will fetch user related data with chat in single query
+    chats = Chat.objects.filter(user=request.user).select_related('user').order_by('-timestamp')
+    
+    return render(request, 'chats/index.html', {'title': title, 'chats': chats})
+
 
 @login_required
 def profile_view(request):
@@ -806,3 +810,54 @@ def save_user_details(request):
     # For GET requests, render the form template
     return render(request, 'profile/index.html')
 
+@login_required
+def user_profile(request, id):
+    title = "Profile"
+    
+    # Get user
+    user = get_object_or_404(User, id=id)
+    
+    # Fetch single profile or None
+    profile = UserProfile.objects.filter(user=user).first()
+    company = CompanyDetail.objects.filter(user=user).first()
+    social_media = SocialMediaDetail.objects.filter(user=user)
+    experience = WorkExperience.objects.filter(user=user)
+    
+    # Get user roles
+    user_roles = Users_to_Roles.objects.filter(user_id=id)
+    roles = Role.objects.all()
+    
+    # Create role dictionary {role_id: role_name}
+    role_lookup = {role.id: role.name for role in roles}
+
+    # Map user_id to a list of role names
+    role_list = [role_lookup.get(ur.roles_id) for ur in user_roles]
+
+    context = {
+        'title': title,
+        'profile': profile,
+        'company': company,
+        'social_media': social_media,
+        'experience': experience,
+        'users': user,
+        'user_with_roles': [{'user': user, 'roles': role_list}],
+    }
+    return render(request, 'profile/profile.html', context)
+
+@login_required
+def store_chat(request):
+    if request.method == 'POST':
+        msg = request.POST.get('msg', '').strip()
+        status = request.POST.get('status', None)
+
+        # Create a new chat object
+        chat = Chat(
+            user=request.user,
+            msg=msg if msg else None,
+            timestamp=timezone.now(),
+            status=int(status) if status else None
+        )
+        chat.save()
+
+        # Redirect or respond as needed
+        return redirect('chats')  # Replace 'chat_page' with your actual chat page URL name

@@ -13,276 +13,81 @@
           <div class="col-xxl-6 col-xl-8 order-xl-1">
             <div class="card">
                                     <div class="card-body px-0 pb-0">
-                                        <ul class="conversation-list px-3" data-simplebar style="max-height: 554px">
-                                            <li class="clearfix">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/avatar-5.jpg' %}" class="rounded" alt="Shreyu N" />
-                                                    <i>10:00</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>Shreyu N</i>
-                                                        <p>
-                                                            Hello!
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
+  <ul class="conversation-list px-3" data-simplebar style="max-height: 554px">
+    {% for chat in chats %}
+      <li class="clearfix {% if chat.user == request.user %}odd text-end{% endif %}">
+        <div class="chat-avatar">
+          {% if chat.user == request.user %}
+            <img src="{% static 'assets/images/users/male-avtar.png' %}" class="rounded" alt="{{ chat.user.first_name }}" />
+          {% else %}
+            <img src="{% static 'assets/images/users/avatar-5.jpg' %}" class="rounded" alt="{{ chat.user.first_name }}" />
+          {% endif %}
+          <i>{{ chat.timestamp|date:"H:i" }}</i>
+        </div>
+        <div class="conversation-text">
+          <div class="ctext-wrap">
+            <i>{{ chat.user.first_name }}</i>
+            <p>{{ chat.msg }}</p>
+          </div>
+        </div>
+        <div class="conversation-actions dropdown">
+          <button class="btn btn-sm btn-link" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class='uil uil-ellipsis-v'></i>
+          </button>
+          <div class="dropdown-menu {% if chat.user == request.user %}dropdown-menu-end{% endif %}">
+            <a class="dropdown-item" href="#">Copy Message</a>
+            <a class="dropdown-item" href="#">Edit</a>
+            <a class="dropdown-item" href="#">Delete</a>
+          </div>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
 
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix odd">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/male-avtar.png' %}" class="rounded" alt="{{ user.first_name }}" />
-                                                    <i>10:01</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>{{ user.first_name }}</i>
-                                                        <p>
-                                                            Hi, How are you ? What about our next meeting?
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/avatar-5.jpg' %}" class="rounded" alt="Shreyu N" />
-                                                    <i>10:01</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>Shreyu N</i>
-                                                        <p>
-                                                            Yeah everything is fine
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix odd">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/male-avtar.png' %}" class="rounded" alt="{{ user.first_name }" />
-                                                    <i>10:02</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>{{ user.first_name }}</i>
-                                                        <p>
-                                                            Wow that's great
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/avatar-5.jpg' %}" alt="Shreyu N" class="rounded" />
-                                                    <i>10:02</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>Shreyu N</i>
-                                                        <p>
-                                                            Let's have it today if you are free
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix odd">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/male-avtar.png' %}" alt="{{ user.first_name }}" class="rounded" />
-                                                    <i>10:03</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>{{ user.first_name }}</i>
-                                                        <p>
-                                                            Sure thing! let me know if 2pm works for you
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/avatar-5.jpg' %}" alt="Shreyu N" class="rounded" />
-                                                    <i>10:04</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>Shreyu N</i>
-                                                        <p>
-                                                            Sorry, I have another meeting scheduled at 2pm. Can we have it
-                                                            at 3pm instead?
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/avatar-5.jpg' %}" alt="Shreyu N" class="rounded" />
-                                                    <i>10:04</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>Shreyu N</i>
-                                                        <p>
-                                                            We can also discuss about the presentation talk format if you have some extra mins
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu dropdown-menu-end">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="clearfix odd">
-                                                <div class="chat-avatar">
-                                                    <img src="{% static 'assets/images/users/male-avtar.png' %}" alt="{{ user.first_name }}" class="rounded" />
-                                                    <i>10:05</i>
-                                                </div>
-                                                <div class="conversation-text">
-                                                    <div class="ctext-wrap">
-                                                        <i>{{ user.first_name }}</i>
-                                                        <p>
-                                                            3pm it is. Sure, let's discuss about presentation format, it would be great to finalize today. 
-                                                            I am attaching the last year format and assets here...
-                                                        </p>
-                                                    </div>
-                                                    <div class="card mt-2 mb-1 shadow-none border text-start">
-                                                        <div class="p-2">
-                                                            <div class="row align-items-center">
-                                                                <div class="col-auto">
-                                                                    <div class="avatar-sm">
-                                                                        <span class="avatar-title rounded">
-                                                                            .ZIP
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="col ps-0">
-                                                                    <a href="javascript:void(0);"
-                                                                        class="text-muted fw-bold">Hyper-admin-design.zip</a>
-                                                                    <p class="mb-0">2.3 MB</p>
-                                                                </div>
-                                                                <div class="col-auto">
-                                                                    <!-- Button -->
-                                                                    <a href="javascript:void(0);"
-                                                                        class="btn btn-link btn-lg text-muted">
-                                                                        <i class="ri-download-2-line"></i>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="conversation-actions dropdown">
-                                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"><i class='uil uil-ellipsis-v'></i></button>
-
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#">Copy Message</a>
-                                                        <a class="dropdown-item" href="#">Edit</a>
-                                                        <a class="dropdown-item" href="#">Delete</a>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </div> <!-- end card-body -->
                                     <div class="card-body p-0">
                                         <div class="row">
                                             <div class="col">
                                                 <div class="mt-2 bg-light p-3">
-                                                    <form class="needs-validation" novalidate="" name="chat-form"
-                                                        id="chat-form">
-                                                        <div class="row">
-                                                            <div class="col mb-2 mb-sm-0">
-                                                                <input type="text" class="form-control border-0" placeholder="Enter your text" required="">
-                                                                <div class="invalid-feedback">
-                                                                    Please enter your messsage
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-sm-auto">
-                                                                <div class="btn-group">
-                                                                    <a href="#" class="btn btn-light"><i class="uil uil-paperclip"></i></a>
-                                                                    <a href="#" class="btn btn-light"> <i class='uil uil-smile'></i> </a>
-                                                                    <div class="d-grid">
-                                                                        <button type="submit" class="btn btn-success chat-send"><i class='uil uil-message'></i></button>
-                                                                    </div>
-                                                                </div>
-                                                            </div> <!-- end col -->
-                                                        </div> <!-- end row-->
-                                                    </form>
+                                                   <form class="needs-validation" novalidate name="chat-form" id="chat-form" method="post" action="{% url 'store_chat' %}">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col mb-2 mb-sm-0">
+            <input type="text" 
+                   class="form-control border-0" 
+                   name="msg" 
+                   id="msg" 
+                   placeholder="Enter your text" 
+                   required>
+            <div class="invalid-feedback">
+                Please enter your message
+            </div>
+        </div>
+
+        <!-- Optional Status Dropdown -->
+        <div class="col-sm-3 mb-2 mb-sm-0">
+            <select class="form-select" name="status" id="status">
+                <option value="">Priority</option>
+                <option value="1">High</option>
+                <option value="2">Medium</option>
+                <option value="3">Low</option>
+            </select>
+        </div>
+
+        <div class="col-sm-auto">
+            <div class="btn-group">
+                <a href="#" class="btn btn-light"><i class="uil uil-paperclip"></i></a>
+                <a href="#" class="btn btn-light"><i class='uil uil-smile'></i></a>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success chat-send">
+                        <i class='uil uil-message'></i>
+                    </button>
+                </div>
+            </div>
+        </div> <!-- end col -->
+    </div> <!-- end row -->
+</form>
+
                                                 </div> 
                                             </div> <!-- end col-->
                                         </div>
@@ -293,7 +98,7 @@
                             <!-- end chat area-->
 
                             <!-- start user detail -->
-                            <div class="col-xxl-3 col-xl-4 order-xl-1">
+                            {% comment %} <div class="col-xxl-3 col-xl-4 order-xl-1">
                                 <div class="card">
                                     <div class="card-body">
                                         <div class="dropdown float-end">
@@ -341,7 +146,7 @@
                                         </div>
                                     </div> <!-- end card-body -->
                                 </div> <!-- end card-->
-                            </div> <!-- end col -->
+                            </div> <!-- end col --> {% endcomment %}
                             <!-- end user detail -->
           </div> <!-- end row-->
       </div>

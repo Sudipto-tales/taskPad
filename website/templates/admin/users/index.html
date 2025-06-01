@@ -30,7 +30,7 @@
                           <tr>
                             <td>{{ forloop.counter }}</td>
                             <td class="table-user">
-                              <img src="{% static 'assets/images/users/male-avtar.png' %}" alt="table-user" class="me-2 rounded-circle" />
+                              <a href="{% url 'user_profile' item.user.id %}"><img src="{% static 'assets/images/users/male-avtar.png' %}" alt="table-user" class="me-2 rounded-circle" /></a>
                               {{ item.user.first_name }}
                             </td>
                             <td>{{ item.user.email }}</td>

@@ -4,7 +4,7 @@ home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
 project_index,project_create,
 task_index,task_create,store_task,task_view,task_delete,reassign_task,status_task,my_task,add_task_comment,upload_task_file, task_edit,update_task,
-chat_index,profile_view,logout_view,save_user_details)
+chat_index,store_chat,profile_view,logout_view,save_user_details,user_profile)
 
 urlpatterns = [
 
@@ -46,6 +46,10 @@ path('projects/create/', project_create, name='projects.create'),
 
 
 path('chats/', chat_index, name='chats'),
+path('chats/store', store_chat, name='store_chat'),
+
+
 path('profile_view/', profile_view, name='profile_view'),
+path('user_profile/<int:id>', user_profile, name='user_profile'),
 path('profile/store', save_user_details, name='profile.store'),
 ]
