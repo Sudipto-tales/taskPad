@@ -11,7 +11,7 @@ from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Role, Users_to_Roles,WorkExperience, Chat,Teams, Project,TaskFile,Task,TaskComment,UserProfile, CompanyDetail, SocialMediaDetail
+from .models import Profile, Projects, Role, Users_to_Roles,WorkExperience, Chat,Teams, Project,TaskFile,Task,TaskComment,UserProfile, CompanyDetail, SocialMediaDetail
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
@@ -107,6 +107,7 @@ def login(request):
 
     return render(request, 'authentication/login.html')
 
+# Logout view
 @login_required
 def logout_view(request):
     logout(request)
@@ -117,7 +118,15 @@ def logout_view(request):
 @login_required
 def home(request):
     title = "Dashboard"
-    return render(request, 'dashboard.html', {'title': title})
+    project = Project.objects.filter(created_by=request.user.id)
+    pcount = project.count()
+    task = Task.objects.filter(created_by=request.user.id)
+    tcount = task.count()
+    users = User.objects.all()
+    ucount = users.count()
+    teams = Teams.objects.all()
+    teamcount = teams.count()
+    return render(request, 'dashboard.html', {'title': title, 'pcount': pcount, 'tcount': tcount, 'ucount': ucount, 'teamcount': teamcount})
 
 #Admin User 
 @login_required
@@ -126,6 +135,7 @@ def admin_user(request):
     users = User.objects.all()
     user_roles = Users_to_Roles.objects.all()
     roles = Role.objects.all()
+    teams = Teams.objects.all()
 
     # Create role dictionary {role_id: role_name}
     role_lookup = {role.id: role.name for role in roles}
@@ -147,27 +157,45 @@ def admin_user(request):
     context = {
         'user_with_roles': user_with_roles,
         'title': title,
+        'roles': roles,
     }
     return render(request, 'admin/users/index.html', context)
 
 
-
-
-@csrf_exempt  # Optional if using CSRFToken in AJAX headers
+@login_required
+@csrf_exempt
 def update_user(request, id):
     if request.method == 'POST':
         user = get_object_or_404(Profile, id=id)
-        user_role = get_object_or_404(Users_to_Roles, user_id = id)
-        role = request.POST.get('role')
+        user_role = get_object_or_404(Users_to_Roles, user_id=id)
+
+        role_id = request.POST.get('role_id')
         is_active = request.POST.get('is_active')
 
-        user_role.roles_id = role
-        user.is_active = bool(int(is_active))
-        user.save()
-        user_role.save()
-        return JsonResponse({'message': 'User updated successfully.'})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        if not role_id or is_active is None:
+            return JsonResponse({'error': 'Missing required fields.'}, status=400)
 
+        try:
+            # Validate role_id and is_active
+            role_id = int(role_id)
+            is_active = bool(int(is_active))
+        except ValueError:
+            return JsonResponse({'error': 'Invalid data format.'}, status=400)
+
+        # Validate that the role_id exists in Roles table
+        role_obj = get_object_or_404(Role, id=role_id)
+
+        # Update user role
+        user_role.roles_id = role_id
+        user_role.save()
+
+        # Update user active status
+        user.is_active = is_active
+        user.save()
+
+        return JsonResponse({'message': 'User updated successfully.'})
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 @login_required
 def admin_role(request):
@@ -196,7 +224,7 @@ def admin_role(request):
     }
     return render(request, 'admin/roles/index.html', context)
 
-
+#Teams Pages
 @login_required
 def admin_team(request):
     title = "Teams"
@@ -288,14 +316,161 @@ def delete_team(request, team_id):
 @login_required
 def project_index(request):
     title = "Projects"
-    return render(request, 'project/index.html', {'title': title})
+    today = timezone.now().date()
+
+    # Fetch all projects
+    all_projects = Project.objects.all()
+
+    # Get unique user IDs who created projects
+    user_ids = all_projects.values_list('created_by', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+
+    # Map: user_id -> user object
+    user_map = {user.id: user for user in users}
+
+    # Add created_by_user to each project
+    for project in all_projects:
+        project.created_by_user = user_map.get(project.created_by)
+
+    # Filter projects by status
+    purged_projects = Project.objects.filter(status=1)
+    done_projects = Project.objects.filter(status=2)
+
+    # Ongoing and due projects
+    ongoing_projects = Project.objects.filter(
+        due_date__gte=today,
+        status=0
+    )
+    due_projects = Project.objects.filter(
+        due_date__lt=today,
+        status=0
+    )
+
+    # All users (optional)
+    user_data = User.objects.all()
+
+    return render(request, 'project/index.html', {
+        'title': title,
+        'all_projects': all_projects,
+        'ongoing_projects': ongoing_projects,
+        'due_projects': due_projects,
+        'purged_projects': purged_projects,
+        'done_projects': done_projects,
+        'users': users,
+        'user_data': user_data
+    })
 
 @login_required
 def project_create(request):
     title = "Projects Create"
     return render(request, 'project/create.html', {'title': title})
 
+@login_required
+def edit_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
 
+    data = {
+        'id': project.id,
+        'name': project.name,
+        'description': project.description,
+        'status': project.status,
+        'due_date': project.due_date.strftime('%Y-%m-%d') if project.due_date else '',
+        'img_name': project.img_name,
+        'img_path': project.img_path.url if project.img_path else '',
+    }
+
+    return JsonResponse({'success': True, 'project': data})
+
+@login_required
+def update_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if request.method == 'POST':
+        try:
+            project.name = request.POST.get('name', project.name)
+            project.description = request.POST.get('description', project.description)
+            project.status = int(request.POST.get('status', project.status))
+            project.due_date = parse_date(request.POST.get('due_date')) or project.due_date
+
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES.getlist('file')[0]  # Only one file considered
+                upload_dir = os.path.join(settings.BASE_DIR, 'static', 'project_file')
+                os.makedirs(upload_dir, exist_ok=True)
+
+                # Create safe filename
+                original_name = uploaded_file.name
+                filename = slugify(os.path.splitext(original_name)[0]) + os.path.splitext(original_name)[1]
+                file_path = os.path.join(upload_dir, filename)
+
+                # Save file manually
+                with open(file_path, 'wb+') as destination:
+                    for chunk in uploaded_file.chunks():
+                        destination.write(chunk)
+
+                # Update project fields
+                project.img_name = filename
+                project.img_path = f"project_file/{filename}"  # Relative to static/
+
+            project.save()
+            return JsonResponse({'success': True, 'message': 'Project updated successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def project_delete(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    project.delete()
+    return redirect('projects')
+
+@login_required
+def store_project(request):
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name')
+            description = request.POST.get('description')
+            status = int(request.POST.get('status', 0))
+            due_date = parse_date(request.POST.get('due_date'))
+
+            project = Project(
+                name=name,
+                description=description,
+                status=status,
+                created_by=request.user.id,
+                due_date=due_date
+            )
+
+            # Only handle the first file for now
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES.getlist('file')[0]  # only first file
+                original_name = uploaded_file.name
+                ext = os.path.splitext(original_name)[1]
+                safe_name = slugify(os.path.splitext(original_name)[0]) + ext
+
+                save_path = os.path.join(settings.BASE_DIR, 'static', 'project_file')
+                os.makedirs(save_path, exist_ok=True)
+
+                file_path = os.path.join(save_path, safe_name)
+                with open(file_path, 'wb+') as dest:
+                    for chunk in uploaded_file.chunks():
+                        dest.write(chunk)
+
+                project.img_name = safe_name
+                project.img_path = f"project_file/{safe_name}"
+
+            project.save()
+
+            return JsonResponse({'success': True, 'message': 'Project created successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+#Task Pages
 @login_required
 def task_index(request):
     title = "Tasks"
@@ -706,23 +881,42 @@ def upload_task_file(request, task_id):
 
     return JsonResponse({'status': 'error', 'message': 'No files uploaded.'}, status=400)
 
+# Chat Pages
 @login_required
 def chat_index(request):
     title = "Chat"
-    # select_related('user') will fetch user related data with chat in single query
-    chats = Chat.objects.filter(user=request.user).select_related('user').order_by('-timestamp')
+    chats = Chat.objects.all()
     
     return render(request, 'chats/index.html', {'title': title, 'chats': chats})
 
+@login_required
+def store_chat(request):
+    if request.method == 'POST':
+        msg = request.POST.get('msg', '').strip()
+        status = request.POST.get('status', None)
 
+        # Create a new chat object
+        chat = Chat(
+            user=request.user,
+            msg=msg if msg else None,
+            timestamp=timezone.now(),
+            status=int(status) if status else None
+        )
+        chat.save()
+
+        # Redirect or respond as needed
+        return redirect('chats')  # Replace 'chat_page' with your actual chat page URL name
+
+#Profile Pages
 @login_required
 def profile_view(request):
     title = "Profile"
     user = request.user
     
-    profile = get_object_or_404(UserProfile, user=user)
-    company = get_object_or_404(CompanyDetail, user=user)
-    social_media = get_object_or_404(SocialMediaDetail, user=user)
+    profile = UserProfile.objects.filter(user=user).first()
+    company = CompanyDetail.objects.filter(user=user).first()
+    social_media = SocialMediaDetail.objects.filter(user=user).first()
+
     experience = WorkExperience.objects.filter(user=user)
     today = timezone.now().date()
 
@@ -732,6 +926,27 @@ def profile_view(request):
         status=0
     )    
     role = Users_to_Roles.objects.filter(user_id=user.id)
+    
+    all_projects = Project.objects.filter(created_by=user.id)
+    user_ids = all_projects.values_list('created_by', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+    user_map = {user.id: user for user in users}
+    for project in all_projects:
+        project.created_by_user = user_map.get(project.created_by)
+        
+    purged_projects = Project.objects.filter(status=1)
+    done_projects = Project.objects.filter(status=2)
+    ongoing_projects = Project.objects.filter(
+        due_date__gte=today,
+        status=0
+    )
+    due_projects = Project.objects.filter(
+        due_date__lt=today,
+        status=0
+    )
+
+    # All users (optional)
+    user_data = User.objects.all()
         
     context = {
         'title': title,
@@ -741,11 +956,16 @@ def profile_view(request):
         'role': role,
         'experience': experience,
         'notification': notification,
+        'all_projects': all_projects,
+        'ongoing_projects': ongoing_projects,
+        'due_projects': due_projects,
+        'purged_projects': purged_projects,
+        'done_projects': done_projects,
+        'users': users,
+        'user_data': user_data
         
     }
     return render(request, 'profile/index.html', context)
-
-
 
 @login_required
 def save_user_details(request):
@@ -844,20 +1064,3 @@ def user_profile(request, id):
     }
     return render(request, 'profile/profile.html', context)
 
-@login_required
-def store_chat(request):
-    if request.method == 'POST':
-        msg = request.POST.get('msg', '').strip()
-        status = request.POST.get('status', None)
-
-        # Create a new chat object
-        chat = Chat(
-            user=request.user,
-            msg=msg if msg else None,
-            timestamp=timezone.now(),
-            status=int(status) if status else None
-        )
-        chat.save()
-
-        # Redirect or respond as needed
-        return redirect('chats')  # Replace 'chat_page' with your actual chat page URL name

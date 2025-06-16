@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (register_view, register,login , verify_email, login_view, 
 home, admin_user, update_user,admin_role,
 admin_team, delete_team, update_team, create_team,
-project_index,project_create,
+project_index,project_create,store_project,project_delete,update_project,edit_project,
 task_index,task_create,store_task,task_view,task_delete,reassign_task,status_task,my_task,add_task_comment,upload_task_file, task_edit,update_task,
 chat_index,store_chat,profile_view,logout_view,save_user_details,user_profile)
 
@@ -12,6 +12,7 @@ path('register/', register_view, name='register'),
 path('sign_up/', register, name='sign_up'),
 path('login/', login_view, name='login'),
 path('sign_in/', login, name='sign_in'),
+path('', home, name='dashboard'),
 path('dashboard/', home, name='dashboard'),
 path('verify/<str:token>/', verify_email, name='verify_email'),
 path('logout/', logout_view, name='logout'),
@@ -43,6 +44,12 @@ path('tasks/<int:id>/edit/', update_task, name='tasks.update_task'),
 #Projects Paths
 path('projects/', project_index, name='projects'),
 path('projects/create/', project_create, name='projects.create'),
+path('store_project/', store_project, name='store_project'),
+path('projects/edit/<int:project_id>', edit_project, name='projects.edit'),
+path('projects/<int:id>/edit/', update_project, name='project.update_project'),
+
+path('projects/delete/<int:project_id>', project_delete, name='projects.delete'),
+
 
 
 path('chats/', chat_index, name='chats'),

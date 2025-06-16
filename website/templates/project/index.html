@@ -11,7 +11,7 @@
         <div class="row">
           <div class="card">
             <div class="card-body">
-              <a href="#" data-bs-toggle="modal" data-bs-target="#add-new-team-modal" class="btn btn-success btn-sm ms-3">Add New</a>
+              <a href="#" data-bs-toggle="modal" data-bs-target="#add-new-project-modal" class="btn btn-success btn-sm ms-3"><i class="ri-add-line"></i> <span>Create</span></a>
 
               <div class="tab-content">
                 <div class="tab-pane show active" id="striped-rows-preview">
@@ -28,7 +28,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        {% for project in projects_data %}
+                        {% for project in all_projects %}
                           <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>{{ project.name }}</td>
@@ -41,11 +41,11 @@
                                 <span class="badge bg-warning">Purged</span>
                               {% endif %}
                             </td>
-                            <td>{{ project.created_by }}</td>
+                            <td>{{ user.first_name }}</td>
                             <td>{{ project.due_date }}</td>
                             <td class="table-action">
-                              <a href="#" data-bs-toggle="modal" data-bs-target="#edit-team-modal" class="action-icon"><i class="mdi mdi-pencil"></i></a>
-                              <a href="{% url 'delete_team' team.id %}" class="action-icon"><i class="mdi mdi-delete"></i></a>
+                              <a href="#" data-bs-toggle="modal" data-bs-target="#edit-project-modal" class="action-icon"><i class="mdi mdi-pencil"></i></a>
+                              <a href="{% url "projects.delete" project.id %}" class="action-icon"><i class="mdi mdi-delete"></i></a>
                             </td>
                           </tr>
                         {% empty %}
