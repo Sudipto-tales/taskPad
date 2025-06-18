@@ -128,7 +128,6 @@ def home(request):
     teamcount = teams.count()
     return render(request, 'dashboard.html', {'title': title, 'pcount': pcount, 'tcount': tcount, 'ucount': ucount, 'teamcount': teamcount})
 
-#Admin User 
 @login_required
 def admin_user(request):
     title = "Users"
@@ -140,19 +139,26 @@ def admin_user(request):
     # Create role dictionary {role_id: role_name}
     role_lookup = {role.id: role.name for role in roles}
 
-    # Map user_id to a list of role names
+    # Map user_id to a list of role IDs and role names
+# Map user_id to a list of role objects and role IDs
     user_roles_map = {}
     for ur in user_roles:
-        user_roles_map.setdefault(ur.user_id, []).append(role_lookup.get(ur.roles_id))
+        user_roles_map.setdefault(ur.user_id, []).append({
+            'id': ur.roles_id,
+            'name': role_lookup.get(ur.roles_id)
+        })
 
     # Prepare list of users with their roles
     user_with_roles = []
     for u in users:
-        role_list = user_roles_map.get(u.id, [])
+        roles_for_user = user_roles_map.get(u.id, [])
+        first_role_id = roles_for_user[0]['id'] if roles_for_user else None
         user_with_roles.append({
             'user': u,
-            'roles': role_list,
+            'roles': roles_for_user,
+            'role_id': first_role_id  # pass first role id for editing
         })
+
 
     context = {
         'user_with_roles': user_with_roles,
@@ -162,40 +168,41 @@ def admin_user(request):
     return render(request, 'admin/users/index.html', context)
 
 
-@login_required
 @csrf_exempt
+@login_required
 def update_user(request, id):
-    if request.method == 'POST':
-        user = get_object_or_404(Profile, id=id)
-        user_role = get_object_or_404(Users_to_Roles, user_id=id)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
-        role_id = request.POST.get('role_id')
-        is_active = request.POST.get('is_active')
+    # Fetch user
+    user = get_object_or_404(Profile, id=id)
 
-        if not role_id or is_active is None:
-            return JsonResponse({'error': 'Missing required fields.'}, status=400)
+    role_id = request.POST.get('role_id')
+    is_active = request.POST.get('is_active')
 
-        try:
-            # Validate role_id and is_active
-            role_id = int(role_id)
-            is_active = bool(int(is_active))
-        except ValueError:
-            return JsonResponse({'error': 'Invalid data format.'}, status=400)
+    if not role_id or is_active is None:
+        return JsonResponse({'error': 'Missing required fields.'}, status=400)
 
-        # Validate that the role_id exists in Roles table
-        role_obj = get_object_or_404(Role, id=role_id)
+    try:
+        role_id = int(role_id)
+        is_active = bool(int(is_active))  # Convert '1'/'0' to True/False
+    except ValueError:
+        return JsonResponse({'error': 'Invalid data format.'}, status=400)
 
-        # Update user role
+    # Check if role_id is valid
+    get_object_or_404(Role, id=role_id)
+
+    # Update or create role mapping
+    user_role, created = Users_to_Roles.objects.get_or_create(user_id=id, defaults={'roles_id': role_id})
+    if not created:
         user_role.roles_id = role_id
         user_role.save()
 
-        # Update user active status
-        user.is_active = is_active
-        user.save()
+    # Update user active status
+    user.is_active = is_active
+    user.save()
 
-        return JsonResponse({'message': 'User updated successfully.'})
-
-    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+    return redirect('users')
 
 @login_required
 def admin_role(request):
@@ -370,7 +377,7 @@ def edit_project(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
     data = {
-        'id': project.id,
+        'id': project_id,
         'name': project.name,
         'description': project.description,
         'status': project.status,
@@ -379,7 +386,10 @@ def edit_project(request, project_id):
         'img_path': project.img_path.url if project.img_path else '',
     }
 
-    return JsonResponse({'success': True, 'project': data})
+    return render(request, 'project/edit.html', {
+        'title': 'Edit Project',
+        'project': data
+    })
 
 @login_required
 def update_project(request, project_id):
@@ -412,12 +422,14 @@ def update_project(request, project_id):
                 project.img_path = f"project_file/{filename}"  # Relative to static/
 
             project.save()
-            return JsonResponse({'success': True, 'message': 'Project updated successfully.'})
+            messages.success(request, "Project updated successfully.")
+            return redirect('projects')
 
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
-
-    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+            messages.error(request, f"An error occurred while updating: {str(e)}")
+            return redirect('projects')
+    messages.error(request, "Invalid request method.")
+    return redirect('projects')
 
 
 @login_required

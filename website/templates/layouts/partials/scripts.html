@@ -37,3 +37,19 @@
   updateClock()
   setInterval(updateClock, 1000)
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.edit-user-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const userId = this.dataset.userId;
+
+        // Set user ID in hidden input
+        document.getElementById('edit_user_id').value = userId;
+
+        // Dynamically update form action using user ID
+        const form = document.getElementById('edit-user-form');
+        form.action = `/user/update/${userId}`; // <-- Set the correct URL pattern here
+      });
+    });
+  });
+</script>

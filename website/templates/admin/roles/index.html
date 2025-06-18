@@ -21,7 +21,6 @@
                           <th>Name</th>
                           <th>Status</th>
                           <th>Created By</th>
-                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -39,10 +38,6 @@
                             </td>
                             <td class="table-user">{{ r.creator.first_name }}</td>
 
-                            <td class="table-action">
-                              <a href="javascript: void(0);" class="action-icon"><i class="mdi mdi-pencil"></i></a>
-                              <a href="javascript: void(0);" class="action-icon"><i class="mdi mdi-delete"></i></a>
-                            </td>
                           </tr>
                         {% empty %}
                           <tr>

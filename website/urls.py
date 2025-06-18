@@ -46,7 +46,7 @@ path('projects/', project_index, name='projects'),
 path('projects/create/', project_create, name='projects.create'),
 path('store_project/', store_project, name='store_project'),
 path('projects/edit/<int:project_id>', edit_project, name='projects.edit'),
-path('projects/<int:id>/edit/', update_project, name='project.update_project'),
+path('projects/update/<int:project_id>', update_project, name='project.update_project'),
 
 path('projects/delete/<int:project_id>', project_delete, name='projects.delete'),
 
