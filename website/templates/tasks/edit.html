@@ -10,7 +10,7 @@
           <div class="col-12">
             <div class="card">
               <div class="card-body">
-                <form action="{% url 'store_task' %}" method="POST" enctype="multipart/form-data">
+                <form action="{% url 'tasks.update_task' task.id %}" method="POST" enctype="multipart/form-data">
                   {% csrf_token %}
                   <div class="row">
                     <div class="col-xl-6">
@@ -19,37 +19,38 @@
                         <select id="project_id" name="project_id" class="form-select">
                           <option value="">-- Select Project --</option>
                           {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
+                            <option value="{{ project.id }}" {% if project.id == task.project.id %}selected{% endif %}>{{ project.name }}</option>
                           {% endfor %}
                         </select>
                       </div>
 
                       <div class="mb-3">
                         <label for="name" class="form-label">Task Name</label>
-                        <input type="text" id="name" name="name" class="form-control" placeholder="Enter task name" required />
+                        <input type="text" id="name" name="name" class="form-control" value="{{ task.name }}" required />
                       </div>
 
                       <div class="mb-3">
                         <label for="overview" class="form-label">Overview</label>
-                        <textarea class="form-control" id="overview" name="overview" rows="5" placeholder="Enter some brief about task.."></textarea>
+                        <textarea class="form-control" id="overview" name="overview" rows="5">{{ task.overview }}</textarea>
                       </div>
 
                       <div class="mb-3">
                         <label for="priority" class="form-label">Priority</label>
                         <select id="priority" name="priority" class="form-select" required>
                           <option value="">-- Select Priority --</option>
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
+                          <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                          <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                          <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
                         </select>
                       </div>
+
                       <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <select name="status" class="form-select" required>
                           <option value="">-- Select Status --</option>
-                          <option value="0">Active</option>
-                          <option value="1">Purged</option>
-                          <option value="2">Complete</option>
+                          <option value="0" {% if task.status == 0 %}selected{% endif %}>Active</option>
+                          <option value="1" {% if task.status == 1 %}selected{% endif %}>Purged</option>
+                          <option value="2" {% if task.status == 2 %}selected{% endif %}>Complete</option>
                         </select>
                       </div>
 
@@ -58,7 +59,7 @@
                         <select id="assign_user" name="assign_user" class="form-select">
                           <option value="">-- Optional --</option>
                           {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.first_name }}</option>
+                            <option value="{{ user.id }}" {% if task.assign_user and user.id == task.assign_user.id %}selected{% endif %}>{{ user.first_name }}</option>
                           {% endfor %}
                         </select>
                       </div>
@@ -66,18 +67,18 @@
 
                     <div class="col-xl-6">
                       <div class="mb-3">
-                        <label class="form-label">Upload Files (multiple allowed)</label>
+                        <label class="form-label">Upload Files (additional uploads)</label>
                         <input name="file" type="file" class="form-control" multiple />
                       </div>
 
                       <div class="mb-3">
                         <label class="form-label">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" required />
+                        <input type="date" name="start_date" class="form-control" value="{{ task.start_date|date:'Y-m-d' }}" required />
                       </div>
 
                       <div class="mb-3">
                         <label class="form-label">Due Date</label>
-                        <input type="date" name="due_date" class="form-control" required />
+                        <input type="date" name="due_date" class="form-control" value="{{ task.due_date|date:'Y-m-d' }}" required />
                       </div>
 
                       <div class="mb-3">
@@ -85,15 +86,29 @@
                         <select id="assign_team" name="assign_team" class="form-select">
                           <option value="">-- Optional --</option>
                           {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            <option value="{{ team.id }}" {% if task.assign_team and team.id == task.assign_team.id %}selected{% endif %}>{{ team.name }}</option>
                           {% endfor %}
                         </select>
                       </div>
+
+                      {% if task.files.all %}
+                        <div class="mb-3">
+                          <label class="form-label">Existing Files</label>
+                          <ul>
+                            {% for file in task.files.all %}
+                              <li>
+                                <a href="{{ file.file }}" target="_blank">{{ file.file_name }}</a>
+                                ({{ file.file_size }} bytes)
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                      {% endif %}
                     </div>
                   </div>
 
                   <div class="text-end">
-                    <button type="submit" class="btn btn-primary">Create Task</button>
+                    <button type="submit" class="btn btn-success">Update Task</button>
                   </div>
                 </form>
               </div> <!-- end card-body -->

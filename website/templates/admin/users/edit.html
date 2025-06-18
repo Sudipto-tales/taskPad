@@ -7,25 +7,22 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <form id="edit-user-form">
+      <form id="edit-user-form" method="post" action="">
         {% csrf_token %}
         <div class="modal-body">
-          <input type="hidden" id="edit_user_id" />
 
           <div class="mb-3">
             <label for="role_id" class="form-label">Role</label>
-            <select id="role_id" class="form-select" required>
-              <option value="1">Default</option>
-              <option value="2">Employ</option>
-              <option value="3">Admin</option>
-              <option value="4">Tech Admin</option>
-              <option value="5">Tech</option>
+            <select id="role_id" name="role_id" class="form-select" required>
+              {% for role in roles %}
+              <option value="{{role.id}}">{{role.name}}</option>
+              {% endfor %}
             </select>
           </div>
 
           <div class="mb-3">
             <label for="is_active" class="form-label">Status</label>
-            <select id="is_active" class="form-select" required>
+            <select id="is_active" name="is_active" class="form-select" required>
               <option value="1">Active</option>
               <option value="0">Inactive</option>
             </select>

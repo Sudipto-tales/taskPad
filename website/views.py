@@ -11,8 +11,17 @@ from django.contrib import messages
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Role, Users_to_Roles, Teams, Projects
+from .models import Profile, Projects, Role, Users_to_Roles,WorkExperience, Chat,Teams, Project,TaskFile,Task,TaskComment,UserProfile, CompanyDetail, SocialMediaDetail
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.utils.dateparse import parse_date
+from django.utils import timezone
+
+import os
+from django.conf import settings
+from django.utils.text import slugify
+
+@csrf_exempt
 
 # Show registration form
 def register_view(request):
@@ -98,6 +107,7 @@ def login(request):
 
     return render(request, 'authentication/login.html')
 
+# Logout view
 @login_required
 def logout_view(request):
     logout(request)
@@ -108,7 +118,15 @@ def logout_view(request):
 @login_required
 def home(request):
     title = "Dashboard"
-    return render(request, 'dashboard.html', {'title': title})
+    project = Project.objects.filter(created_by=request.user.id)
+    pcount = project.count()
+    task = Task.objects.filter(created_by=request.user.id)
+    tcount = task.count()
+    users = User.objects.all()
+    ucount = users.count()
+    teams = Teams.objects.all()
+    teamcount = teams.count()
+    return render(request, 'dashboard.html', {'title': title, 'pcount': pcount, 'tcount': tcount, 'ucount': ucount, 'teamcount': teamcount})
 
 #Admin User 
 @login_required
@@ -117,6 +135,7 @@ def admin_user(request):
     users = User.objects.all()
     user_roles = Users_to_Roles.objects.all()
     roles = Role.objects.all()
+    teams = Teams.objects.all()
 
     # Create role dictionary {role_id: role_name}
     role_lookup = {role.id: role.name for role in roles}
@@ -138,27 +157,45 @@ def admin_user(request):
     context = {
         'user_with_roles': user_with_roles,
         'title': title,
+        'roles': roles,
     }
     return render(request, 'admin/users/index.html', context)
 
 
-
-
-@csrf_exempt  # Optional if using CSRFToken in AJAX headers
+@login_required
+@csrf_exempt
 def update_user(request, id):
     if request.method == 'POST':
         user = get_object_or_404(Profile, id=id)
-        user_role = get_object_or_404(Users_to_Roles, user_id = id)
-        role = request.POST.get('role')
+        user_role = get_object_or_404(Users_to_Roles, user_id=id)
+
+        role_id = request.POST.get('role_id')
         is_active = request.POST.get('is_active')
 
-        user_role.roles_id = role
-        user.is_active = bool(int(is_active))
-        user.save()
-        user_role.save()
-        return JsonResponse({'message': 'User updated successfully.'})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        if not role_id or is_active is None:
+            return JsonResponse({'error': 'Missing required fields.'}, status=400)
 
+        try:
+            # Validate role_id and is_active
+            role_id = int(role_id)
+            is_active = bool(int(is_active))
+        except ValueError:
+            return JsonResponse({'error': 'Invalid data format.'}, status=400)
+
+        # Validate that the role_id exists in Roles table
+        role_obj = get_object_or_404(Role, id=role_id)
+
+        # Update user role
+        user_role.roles_id = role_id
+        user_role.save()
+
+        # Update user active status
+        user.is_active = is_active
+        user.save()
+
+        return JsonResponse({'message': 'User updated successfully.'})
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 @login_required
 def admin_role(request):
@@ -187,7 +224,7 @@ def admin_role(request):
     }
     return render(request, 'admin/roles/index.html', context)
 
-
+#Teams Pages
 @login_required
 def admin_team(request):
     title = "Teams"
@@ -279,30 +316,751 @@ def delete_team(request, team_id):
 @login_required
 def project_index(request):
     title = "Projects"
-    return render(request, 'project/index.html', {'title': title})
+    today = timezone.now().date()
+
+    # Fetch all projects
+    all_projects = Project.objects.all()
+
+    # Get unique user IDs who created projects
+    user_ids = all_projects.values_list('created_by', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+
+    # Map: user_id -> user object
+    user_map = {user.id: user for user in users}
+
+    # Add created_by_user to each project
+    for project in all_projects:
+        project.created_by_user = user_map.get(project.created_by)
+
+    # Filter projects by status
+    purged_projects = Project.objects.filter(status=1)
+    done_projects = Project.objects.filter(status=2)
+
+    # Ongoing and due projects
+    ongoing_projects = Project.objects.filter(
+        due_date__gte=today,
+        status=0
+    )
+    due_projects = Project.objects.filter(
+        due_date__lt=today,
+        status=0
+    )
+
+    # All users (optional)
+    user_data = User.objects.all()
+
+    return render(request, 'project/index.html', {
+        'title': title,
+        'all_projects': all_projects,
+        'ongoing_projects': ongoing_projects,
+        'due_projects': due_projects,
+        'purged_projects': purged_projects,
+        'done_projects': done_projects,
+        'users': users,
+        'user_data': user_data
+    })
 
 @login_required
 def project_create(request):
     title = "Projects Create"
     return render(request, 'project/create.html', {'title': title})
 
+@login_required
+def edit_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    data = {
+        'id': project.id,
+        'name': project.name,
+        'description': project.description,
+        'status': project.status,
+        'due_date': project.due_date.strftime('%Y-%m-%d') if project.due_date else '',
+        'img_name': project.img_name,
+        'img_path': project.img_path.url if project.img_path else '',
+    }
+
+    return JsonResponse({'success': True, 'project': data})
+
+@login_required
+def update_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    if request.method == 'POST':
+        try:
+            project.name = request.POST.get('name', project.name)
+            project.description = request.POST.get('description', project.description)
+            project.status = int(request.POST.get('status', project.status))
+            project.due_date = parse_date(request.POST.get('due_date')) or project.due_date
+
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES.getlist('file')[0]  # Only one file considered
+                upload_dir = os.path.join(settings.BASE_DIR, 'static', 'project_file')
+                os.makedirs(upload_dir, exist_ok=True)
+
+                # Create safe filename
+                original_name = uploaded_file.name
+                filename = slugify(os.path.splitext(original_name)[0]) + os.path.splitext(original_name)[1]
+                file_path = os.path.join(upload_dir, filename)
+
+                # Save file manually
+                with open(file_path, 'wb+') as destination:
+                    for chunk in uploaded_file.chunks():
+                        destination.write(chunk)
+
+                # Update project fields
+                project.img_name = filename
+                project.img_path = f"project_file/{filename}"  # Relative to static/
+
+            project.save()
+            return JsonResponse({'success': True, 'message': 'Project updated successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required
+def project_delete(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    project.delete()
+    return redirect('projects')
+
+@login_required
+def store_project(request):
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name')
+            description = request.POST.get('description')
+            status = int(request.POST.get('status', 0))
+            due_date = parse_date(request.POST.get('due_date'))
+
+            project = Project(
+                name=name,
+                description=description,
+                status=status,
+                created_by=request.user.id,
+                due_date=due_date
+            )
+
+            # Only handle the first file for now
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES.getlist('file')[0]  # only first file
+                original_name = uploaded_file.name
+                ext = os.path.splitext(original_name)[1]
+                safe_name = slugify(os.path.splitext(original_name)[0]) + ext
+
+                save_path = os.path.join(settings.BASE_DIR, 'static', 'project_file')
+                os.makedirs(save_path, exist_ok=True)
+
+                file_path = os.path.join(save_path, safe_name)
+                with open(file_path, 'wb+') as dest:
+                    for chunk in uploaded_file.chunks():
+                        dest.write(chunk)
+
+                project.img_name = safe_name
+                project.img_path = f"project_file/{safe_name}"
+
+            project.save()
+
+            return JsonResponse({'success': True, 'message': 'Project created successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
 #Task Pages
 @login_required
 def task_index(request):
     title = "Tasks"
-    return render(request, 'tasks/index.html', {'title': title})
+    today = timezone.now().date()
+    all_task = Task.objects.filter()
+    user_ids = all_task.values_list('assign_by_id', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+
+# Create a mapping: user_id => user
+    user_map = {user.id: user for user in users}
+
+# Add a .assign_by_user attribute to each task
+    for task in all_task:
+      task.assign_by_user = user_map.get(task.assign_by_id)
+
+    
+    purged_task = Task.objects.filter(status=1)
+    done_task = Task.objects.filter(status=2)
+    today = timezone.now().date()
+
+    ongoing_tasks = Task.objects.filter(
+     start_date__lte=today,
+     due_date__gte=today,
+     status=0
+    )
+    due_tasks = Task.objects.filter(
+     due_date__lt=today,
+     status=0
+    )
+    user_data = User.objects.all()
+    teams = Teams.objects.all()
+    
+
+    return render(request, 'tasks/index.html', {'title': title, 'all_task': all_task,'ongoing_tasks': ongoing_tasks,'due_tasks': due_tasks,'purge_tasks': purged_task,'done_tasks': done_task,'users': users,'teams':teams,'user_data':user_data})
 
 @login_required
 def task_create(request):
     title = "Tasks Create"
-    return render(request, 'tasks/create.html', {'title': title})
+    users = User.objects.all()
+    projects = Project.objects.all()
+    teams = Teams.objects.all()
 
+    return render(request, 'tasks/create.html', {'title': title,'users':users,'projects':projects,'teams':teams})
+
+@login_required
+def task_view(request, task_id):
+    title = "Task View"
+    task = get_object_or_404(Task, id=task_id)
+    task_files = TaskFile.objects.filter(task=task)
+    comments = TaskComment.objects.filter(task_id=task_id).order_by('-timestamp')
+
+    # Fetch users for the comments
+    user_ids = comments.values_list('user_id', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+
+    # Create a mapping: user_id => user
+    user_map = {user.id: user for user in users}
+
+    # Add a user object to each comment
+    for comment in comments:
+        comment.user_obj = user_map.get(comment.user_id)
+
+    assign_by_user = task.assign_by
+    assign_user = task.assign_user
+
+    context = {
+        'title': title,
+        'task': task,
+        'task_files': task_files,
+        'assign_by_user': assign_by_user,
+        'assign_user': assign_user,
+        'comments': comments,
+    }
+    return render(request, 'tasks/view.html', context)
+
+def store_task(request):
+    if request.method == 'POST':
+        print("Received POST request")
+
+        try:
+            print("Starting to process form data")
+
+            project_id = request.POST.get('project_id')
+            name = request.POST.get('name')
+            overview = request.POST.get('overview')
+            priority = request.POST.get('priority')
+            status = request.POST.get('status',1)
+            assign_user_id = request.POST.get('assign_user')
+            assign_team_id = request.POST.get('assign_team')
+            start_date = parse_date(request.POST.get('start_date'))
+            due_date = parse_date(request.POST.get('due_date'))
+
+            print(f"Project ID: {project_id}, Name: {name}, Priority: {priority}")
+
+            project = Project.objects.get(id=project_id) if project_id else None
+            assign_user = User.objects.get(id=assign_user_id) if assign_user_id else None
+            assign_team = Teams.objects.get(id=assign_team_id) if assign_team_id else None
+
+            print("Creating task...")
+
+            task = Task.objects.create(
+                project=project,
+                name=name,
+                overview=overview,
+                priority=priority,
+                status=status,
+                assign_user=assign_user,
+                assign_team=assign_team,
+                assign_by=request.user,
+                created_by=request.user,
+                start_date=start_date,
+                due_date=due_date
+            )
+
+            print(f"Task created: {task.id}")
+
+            if request.FILES:
+                print("Processing uploaded files...")
+                upload_dir = os.path.join(settings.BASE_DIR, 'static', 'task_files')
+                os.makedirs(upload_dir, exist_ok=True)
+
+                for f in request.FILES.getlist('file'):
+                    # Generate a safe filename
+                    filename = slugify(os.path.splitext(f.name)[0]) + os.path.splitext(f.name)[1]
+                    file_path = os.path.join(upload_dir, filename)
+
+                    # Write file to disk
+                    with open(file_path, 'wb+') as destination:
+                        for chunk in f.chunks():
+                            destination.write(chunk)
+
+                    # Generate the URL (adjust if needed)
+                    file_url = f"{settings.MEDIA_URL}{filename}"  # results in /static/task_files/filename
+                    full_file_url = request.build_absolute_uri(file_url)  # http://127.0.0.1:8000/static/task_files/filename
+
+                    # Save to your model (assuming CharField called file_url)
+                    task_file = TaskFile.objects.create(
+                        task=task,
+                        file_name=filename,
+                        file_size=f.size,
+                        file_type=os.path.splitext(filename)[1][1:].lower(),
+                        file=full_file_url
+                    )
+                    print("Saved file URL:", full_file_url)
+
+            messages.success(request, "Task created successfully.")
+            return redirect('tasks')
+
+        except Exception as e:
+            print("Exception occurred:", str(e))  # Print the real error
+            messages.error(request, f"Something went wrong: {e}")
+            return redirect('tasks.create')
+
+    print("Rendering form via GET request")
+
+@login_required
+def my_task(request):
+    title = "My Tasks"
+    today = timezone.now().date()
+    
+    # Filter tasks where the logged-in user is either the assigner or the assignee
+    all_task = Task.objects.filter(
+        assign_user_id=request.user.id
+    )
+    all_task = all_task.distinct()
+
+    # Get distinct user IDs to create a user mapping
+    user_ids = all_task.values_list('assign_by_id', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+    user_map = {user.id: user for user in users}
+
+    # Add assign_by_user attribute for easier template use
+    for task in all_task:
+        task.assign_by_user = user_map.get(task.assign_by_id)
+
+    # Filter tasks by status
+    purged_task = all_task.filter(status=1)
+    done_task = all_task.filter(status=2)
+    ongoing_tasks = all_task.filter(
+        start_date__lte=today,
+        due_date__gte=today,
+        status=0
+    )
+    due_tasks = all_task.filter(
+        due_date__lt=today,
+        status=0
+    )
+
+    user_data = User.objects.all()
+    teams = Teams.objects.all()
+
+    return render(
+        request,
+        'tasks/index.html',
+        {
+            'title': title,
+            'all_task': all_task,
+            'ongoing_tasks': ongoing_tasks,
+            'due_tasks': due_tasks,
+            'purge_tasks': purged_task,
+            'done_tasks': done_task,
+            'users': users,
+            'teams': teams,
+            'user_data': user_data
+        }
+    )
+
+@login_required
+def task_edit(request, task_id):
+    title = "Edit Task"
+    task = get_object_or_404(Task, id=task_id)
+    users = User.objects.all()
+    projects = Project.objects.all()
+    teams = Teams.objects.all()
+
+    context = {
+        'title': title,
+        'task': task,
+        'users': users,
+        'projects': projects,
+        'teams': teams
+    }
+    return render(request, 'tasks/edit.html', context)
+
+@login_required
+def update_task(request, task_id):
+    if request.method == 'POST':
+        try:
+            print("Received POST request for updating task")
+
+            task = get_object_or_404(Task, id=task_id)
+
+            project_id = request.POST.get('project_id')
+            name = request.POST.get('name')
+            overview = request.POST.get('overview')
+            priority = request.POST.get('priority')
+            status = request.POST.get('status', 1)
+            assign_user_id = request.POST.get('assign_user')
+            assign_team_id = request.POST.get('assign_team')
+            start_date = parse_date(request.POST.get('start_date'))
+            due_date = parse_date(request.POST.get('due_date'))
+
+            # Update task fields
+            task.project = Project.objects.get(id=project_id) if project_id else None
+            task.name = name
+            task.overview = overview
+            task.priority = priority
+            task.status = status
+            task.assign_user = User.objects.get(id=assign_user_id) if assign_user_id else None
+            task.assign_team = Teams.objects.get(id=assign_team_id) if assign_team_id else None
+            task.start_date = start_date
+            task.due_date = due_date
+
+            task.save()
+            print(f"Task updated: {task.id}")
+
+            if request.FILES:
+                print("Processing uploaded files for update...")
+                upload_dir = os.path.join(settings.BASE_DIR, 'static', 'task_files')
+                os.makedirs(upload_dir, exist_ok=True)
+
+                for f in request.FILES.getlist('file'):
+                    filename = slugify(os.path.splitext(f.name)[0]) + os.path.splitext(f.name)[1]
+                    file_path = os.path.join(upload_dir, filename)
+
+                    with open(file_path, 'wb+') as destination:
+                        for chunk in f.chunks():
+                            destination.write(chunk)
+
+                    file_url = f"{settings.MEDIA_URL}{filename}"
+                    full_file_url = request.build_absolute_uri(file_url)
+
+                    TaskFile.objects.create(
+                        task=task,
+                        file_name=filename,
+                        file_size=f.size,
+                        file_type=os.path.splitext(filename)[1][1:].lower(),
+                        file=full_file_url
+                    )
+                    print("Saved file URL:", full_file_url)
+
+            messages.success(request, "Task updated successfully.")
+            return redirect('tasks')
+
+        except Exception as e:
+            print("Exception occurred:", str(e))
+            messages.error(request, f"Something went wrong: {e}")
+            return redirect('tasks.edit', task_id=task_id)
+
+    return redirect('tasks.edit', task_id=task_id)
+
+@login_required
+def task_delete(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    task.delete()
+    return redirect('tasks')
+
+@login_required
+def add_task_comment(request, task_id):
+    if request.method == 'POST':
+        msg = request.POST.get('msg', '').strip()
+        if not msg:
+            return JsonResponse({'error': 'Comment message cannot be empty.'}, status=400)
+
+        # Validate that the task exists
+        task = get_object_or_404(Task, id=task_id)
+
+        # Create the comment
+        comment = TaskComment.objects.create(
+            user_id=request.user.id,
+            task_id=task.id,
+            msg=msg
+        )
+
+        return redirect('tasks.view', task_id=task.id)
+
+    # If GET or other method
+    messages.error(request, "Invalide request method.")
+    return redirect('tasks.view', task_id=task.id)
+
+@login_required
+def reassign_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    
+    # Check permission
+    if request.user.id != task.assign_by_id:
+        messages.error(request, "You have no permission to reassign this task.")
+        return redirect('tasks.view', task_id=task.id)
+    
+    if request.method == "POST":
+        assign_user_id = request.POST.get("assign_user")
+        assign_team_id = request.POST.get("assign_team")
+
+        if assign_user_id:
+            task.assign_user_id = assign_user_id
+
+        if assign_team_id:
+            task.assign_team_id = assign_team_id
+        else:
+            task.assign_team = None  # clear the assignment if empty
+
+        task.save()
+        messages.success(request, "Task reassigned successfully.")
+        return redirect('tasks.view', task_id=task.id)
+
+    return redirect('tasks.view', task_id=task.id)
+
+@login_required
+def status_task(request,task_id):
+    task = get_object_or_404(Task, id=task_id)
+    
+    # Check permission
+    if request.user.id != task.assign_by_id:
+        messages.error(request, "You have no permission to reassign this task.")
+        return redirect('tasks.view', task_id=task.id)
+    
+    if request.method == "POST":
+        status = request.POST.get("status")
+
+        if status:
+            task.status = status
+        else:
+            task.status = None  # clear the assignment if empty
+
+        task.save()
+        messages.success(request, "Task Status Updated successfully.")
+        return redirect('tasks.view', task_id=task.id)
+
+    return redirect('tasks.view', task_id=task.id)
+
+@login_required
+def upload_task_file(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+
+    if request.method == 'POST' and request.FILES:
+        print("Processing uploaded files...")
+
+        # Where to store uploaded files
+        upload_dir = os.path.join(settings.BASE_DIR, 'static', 'task_files')
+        os.makedirs(upload_dir, exist_ok=True)
+
+        for f in request.FILES.getlist('file'):
+            # Generate a safe filename
+            filename = slugify(os.path.splitext(f.name)[0]) + os.path.splitext(f.name)[1]
+            file_path = os.path.join(upload_dir, filename)
+
+            # Write file to disk
+            with open(file_path, 'wb+') as destination:
+                for chunk in f.chunks():
+                    destination.write(chunk)
+
+            # Generate the URL (adjust if needed)
+            file_url = f"/static/task_files/{filename}"
+            full_file_url = request.build_absolute_uri(file_url)
+
+            # Save to your model
+            task_file = TaskFile.objects.create(
+                task=task,
+                file_name=filename,
+                file_size=f.size,
+                file_type=os.path.splitext(filename)[1][1:].lower(),
+                file=full_file_url
+            )
+            print("Saved file URL:", full_file_url)
+
+        # Dropzone expects JSON response
+        return redirect('tasks.view', task_id=task.id)
+
+    return JsonResponse({'status': 'error', 'message': 'No files uploaded.'}, status=400)
+
+# Chat Pages
 @login_required
 def chat_index(request):
     title = "Chat"
-    return render(request, 'chats/index.html', {'title': title})
+    chats = Chat.objects.all()
+    
+    return render(request, 'chats/index.html', {'title': title, 'chats': chats})
 
+@login_required
+def store_chat(request):
+    if request.method == 'POST':
+        msg = request.POST.get('msg', '').strip()
+        status = request.POST.get('status', None)
+
+        # Create a new chat object
+        chat = Chat(
+            user=request.user,
+            msg=msg if msg else None,
+            timestamp=timezone.now(),
+            status=int(status) if status else None
+        )
+        chat.save()
+
+        # Redirect or respond as needed
+        return redirect('chats')  # Replace 'chat_page' with your actual chat page URL name
+
+#Profile Pages
 @login_required
 def profile_view(request):
     title = "Profile"
-    return render(request, 'profile/index.html', {'title': title})
+    user = request.user
+    
+    profile = UserProfile.objects.filter(user=user).first()
+    company = CompanyDetail.objects.filter(user=user).first()
+    social_media = SocialMediaDetail.objects.filter(user=user).first()
+
+    experience = WorkExperience.objects.filter(user=user)
+    today = timezone.now().date()
+
+    notification = Task.objects.filter(
+        assign_user_id=request.user.id,
+        due_date__lte=today,
+        status=0
+    )    
+    role = Users_to_Roles.objects.filter(user_id=user.id)
+    
+    all_projects = Project.objects.filter(created_by=user.id)
+    user_ids = all_projects.values_list('created_by', flat=True).distinct()
+    users = User.objects.filter(id__in=user_ids)
+    user_map = {user.id: user for user in users}
+    for project in all_projects:
+        project.created_by_user = user_map.get(project.created_by)
+        
+    purged_projects = Project.objects.filter(status=1)
+    done_projects = Project.objects.filter(status=2)
+    ongoing_projects = Project.objects.filter(
+        due_date__gte=today,
+        status=0
+    )
+    due_projects = Project.objects.filter(
+        due_date__lt=today,
+        status=0
+    )
+
+    # All users (optional)
+    user_data = User.objects.all()
+        
+    context = {
+        'title': title,
+        'profile': profile,
+        'company': company,
+        'social_media': social_media,
+        'role': role,
+        'experience': experience,
+        'notification': notification,
+        'all_projects': all_projects,
+        'ongoing_projects': ongoing_projects,
+        'due_projects': due_projects,
+        'purged_projects': purged_projects,
+        'done_projects': done_projects,
+        'users': users,
+        'user_data': user_data
+        
+    }
+    return render(request, 'profile/index.html', context)
+
+@login_required
+def save_user_details(request):
+    if request.method == 'POST':
+        user = request.user
+
+        # Save UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.f_name = request.POST.get('f_name', '').strip() or None
+        profile.l_name = request.POST.get('l_name', '').strip() or None
+        profile.full_name = f"{profile.f_name} {profile.l_name}".strip() if profile.f_name or profile.l_name else None
+        profile.location = request.POST.get('location', '').strip() or None
+        profile.phone_number = request.POST.get('phone_number', '').strip() or None
+        profile.bio = request.POST.get('bio', '').strip() or None
+        profile.save()
+
+        # Save CompanyDetail
+        company, _ = CompanyDetail.objects.get_or_create(user=user)
+        company.company_name = request.POST.get('companyname', '').strip() or None
+        company.website_link = request.POST.get('cwebsite', '').strip() or None
+        company.save()
+        
+        # Save UserExperience
+        experience, _ = WorkExperience.objects.get_or_create(
+            user=user,
+            job_title=request.POST.get('job_title', '').strip() or None,
+            company_name=request.POST.get('company_name', '').strip() or None,
+            start_year=int(request.POST.get('start_year', 0))
+        )
+        experience.website_name = request.POST.get('website_name', '').strip() or None
+        experience.end_year = request.POST.get('end_year', '').strip() or None
+        experience.description = request.POST.get('description', '').strip() or ''
+        experience.save()
+
+        # Save SocialMediaDetail - we'll handle multiple platforms
+        social_platforms = [
+            ('Facebook', request.POST.get('social-fb', '').strip()),
+            ('Twitter', request.POST.get('social-tw', '').strip()),
+            ('Instagram', request.POST.get('social-insta', '').strip()),
+            ('Linkedin', request.POST.get('social-lin', '').strip()),
+            ('Skype', request.POST.get('social-sky', '').strip()),
+            ('Github', request.POST.get('social-gh', '').strip()),
+        ]
+
+        # Remove existing social media records for this user to avoid duplicates
+        SocialMediaDetail.objects.filter(user=user).delete()
+
+        # Save new social media details
+        for platform, link in social_platforms:
+            if link:  # Save only if link is provided
+                SocialMediaDetail.objects.create(
+                    user=user,
+                    platform=platform,
+                    account_name=link.split('/')[-1] if '/' in link else link,
+                    profile_link=link,
+                    status=True  # or False, depending on your logic
+                )
+
+        messages.success(request, 'Your details have been successfully saved.')
+        return redirect('profile_view')  # Replace with your desired redirect
+
+    # For GET requests, render the form template
+    return render(request, 'profile/index.html')
+
+@login_required
+def user_profile(request, id):
+    title = "Profile"
+    
+    # Get user
+    user = get_object_or_404(User, id=id)
+    
+    # Fetch single profile or None
+    profile = UserProfile.objects.filter(user=user).first()
+    company = CompanyDetail.objects.filter(user=user).first()
+    social_media = SocialMediaDetail.objects.filter(user=user)
+    experience = WorkExperience.objects.filter(user=user)
+    
+    # Get user roles
+    user_roles = Users_to_Roles.objects.filter(user_id=id)
+    roles = Role.objects.all()
+    
+    # Create role dictionary {role_id: role_name}
+    role_lookup = {role.id: role.name for role in roles}
+
+    # Map user_id to a list of role names
+    role_list = [role_lookup.get(ur.roles_id) for ur in user_roles]
+
+    context = {
+        'title': title,
+        'profile': profile,
+        'company': company,
+        'social_media': social_media,
+        'experience': experience,
+        'users': user,
+        'user_with_roles': [{'user': user, 'roles': role_list}],
+    }
+    return render(request, 'profile/profile.html', context)
+
