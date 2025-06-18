@@ -61,3 +61,4 @@ pip-delete-this-directory.txt
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
+.taskPad/settings.py
